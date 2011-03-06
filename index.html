@@ -1,0 +1,43 @@
+<html>
+
+	<head>
+	</head>
+
+	<body>
+		<canvas id="myDrawing" width="200" height="200" tabindex="2">
+		<p>
+		Your browser doesn't support canvas.
+		</p>
+		</canvas>
+<input type="range" min="0.1" max="3" value="1" step="0.1" />
+		<script src="library.js"></script>
+		<script>
+			var imageFilename = "vehicle.png";
+			var drawingCanvas = document.getElementById('myDrawing');
+
+			if (drawingCanvas.getContext) {
+				// Initaliase a 2-dimensional drawing context
+				var context = drawingCanvas.getContext('2d');
+				//Canvas commands go here
+				t2v(drawingCanvas, context, imageFilename, function (library) {
+					drawingCanvas.addEventListener("click", function(e) {
+						var position = {
+							x: e.clientX - drawingCanvas.offsetLeft,
+							y: e.clientY - drawingCanvas.offsetTop
+						};
+						library.addMarker(position);
+						console.log(library.getVertices());
+
+					}, false);
+
+					drawingCanvas.addEventListener("mousewheel", function(e) {
+						alert('s');
+					
+					},false);
+				});
+
+			}
+		</script>
+	</body>
+
+</html>
