@@ -1,7 +1,8 @@
-var marker = function(position, width, height, defaultColor) {
-	var pos = {x: position.x - width/2, y: position.y - height/2},
-	boundingBox = function() {
-		return rectangle(pos.x, pos.y, width, height);
+var marker = function(context, position, width, height, defaultColor) {
+	var pos = position;
+	var boundingBox = function() {
+		var topLeft = {x: pos.x - width/2, y: pos.y - height/2};
+		return rectangle(topLeft.x, topLeft.y, width, height);
 	};
 
 	return {
@@ -14,14 +15,10 @@ var marker = function(position, width, height, defaultColor) {
 		},
 		moveTo: function(newPosition) {
 			pos = newPosition;
+			console.log(pos);
 		},
 		isPointOn: function (point) {
-				   //point = {x: point.x + width/2, y: point.y + height/2};
-				   console.log(point);
-				   //console.log(boundingBox());
-				   //console.log(boundingBox().contains(point));
-				   console.log();
-				   return boundingBox().contains(point);
-			   }
+			return boundingBox().contains(point);
+		}
 	};
 };

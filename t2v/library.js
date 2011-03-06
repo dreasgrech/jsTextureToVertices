@@ -1,6 +1,6 @@
-var t2v = function(canvas, context, image, callback) {
+var t2v = function(canvas, context, image, maxVertices, callback) {
 	var markerFilename = "marker.png",
-	markerWidth = 6,
+	markerWidth = 20,
 	markerHeight = markerWidth,
 	defaultMarkerColor = '#FF0000',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
@@ -36,8 +36,11 @@ var t2v = function(canvas, context, image, callback) {
 			context.drawImage(image, position.x, position.y, width, height);
 		},
 		addMarker = function(position, color) {
+			if (markers.length + 1 > maxVertices) {
+				return;
+			}
 			color = color || defaultMarkerColor;
-			var newMarker = marker(position, markerWidth, markerHeight, defaultMarkerColor);
+			var newMarker = marker(context, position, markerWidth, markerHeight, defaultMarkerColor);
 			markers.push(newMarker);
 			clearCanvas();
 			drawMainImage(function(l) {
@@ -84,9 +87,7 @@ var t2v = function(canvas, context, image, callback) {
 			getMarkerAt: function(position) {
 				var i;
 				for (i = 0; i < markers.length; ++i) {
-					//position = {x: position.x + mar
 					if (markers[i].isPointOn(position)) {
-						//console.log(markers[i].boundingBox());
 						return markers[i];
 					}
 				}

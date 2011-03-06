@@ -1,7 +1,10 @@
-var mouse = function () {
+var mouse = function(canvas) {
 	var position, moveAction, dragAction, isLeftClicked = false;;
-	document.onmousemove = function (e) {
-		position = {x: e.clientX, y: e.clientY};
+	document.onmousemove = function(e) {
+		position = {
+			x: e.clientX - canvas.offsetLeft,
+			y: e.clientY - canvas.offsetTop
+		};
 		if (dragAction) {
 			if (isLeftClicked) {
 				dragAction(position);
@@ -13,27 +16,28 @@ var mouse = function () {
 		}
 	};
 
-	document.onmousedown = function (e) {
+	document.onmousedown = function(e) {
 		isLeftClicked = true;
 		return false;
 	};
 
-	document.onmouseup = function (e) {
+	document.onmouseup = function(e) {
 		isLeftClicked = false;
 		return false;
 	};
 
 	return {
-position: position,
-		  isLeftClicked: function () { return isLeftClicked; },
-		  move: function (action) {
-			  moveAction = action;
-		  },
-drag: function (action) {
-	      dragAction = action;
-      }
+		position: position,
+		isLeftClicked: function() {
+			return isLeftClicked;
+		},
+		move: function(action) {
+			moveAction = action;
+		},
+		drag: function(action) {
+			dragAction = action;
+		}
 
 	};
-
 };
 
