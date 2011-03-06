@@ -7,26 +7,6 @@ var t2v = function(canvas, context, image, callback) {
 	scale = 1,
 	library, width, height, markers = [];
 
-	var marker = function(position, width, height, defaultColor) {
-		var pos = position,
-		boundingBox= function() {
-			return rectangle(pos.x - width / 2, pos.y - height / 2, width, height);
-		};
-
-		return {
-			image: markerFilename,
-			position: pos,
-			boundingBox:boundingBox,
-			draw: function(color) {
-				context.fillStyle = color || defaultColor;
-				var bounds = boundingBox();
-				context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
-			},
-			moveTo: function(newPosition) {
-				pos = newPosition;
-			},
-		};
-	};
 
 	var clearCanvas = function() {
 		context.clearRect(0, 0, width, height);
