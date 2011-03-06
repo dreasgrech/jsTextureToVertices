@@ -84,8 +84,9 @@ var t2v = function(canvas, context, image, callback) {
 			getMarkerAt: function(position) {
 				var i;
 				for (i = 0; i < markers.length; ++i) {
-					if (markers[i].boundingBox().contains(position)) {
-						console.log(markers[i].boundingBox());
+					//position = {x: position.x + mar
+					if (markers[i].isPointOn(position)) {
+						//console.log(markers[i].boundingBox());
 						return markers[i];
 					}
 				}

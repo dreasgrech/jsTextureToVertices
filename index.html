@@ -9,13 +9,12 @@
 		Your browser doesn't support canvas.
 		</p>
 		</canvas>
-<input type="range" min="0.1" max="3" value="1" step="0.1" />
 		<script src="t2v/mouse.js"></script>
 		<script src="t2v/rectangle.js"></script>
 		<script src="t2v/marker.js"></script>
 		<script src="t2v/library.js"></script>
 		<script>
-			var imageFilename = "images/vehicle.png";
+			var imageFilename = "images/block.png";
 			var drawingCanvas = document.getElementById('myDrawing');
 
 			if (drawingCanvas.getContext) {
@@ -28,6 +27,7 @@
 							x: e.clientX - drawingCanvas.offsetLeft,
 							y: e.clientY - drawingCanvas.offsetTop
 						};
+						console.log('Adding marker to: (' + position.x + ', ' + position.y + ')');
 						library.addMarker(position);
 						//console.log(library.getVertices());
 
@@ -38,11 +38,15 @@
 					},false);
 
 					var mouseInput = mouse();
+					mouseInput.move(function (pos) {
+						//console.log(pos);
+
+					});
 					mouseInput.drag(function (pos) {
 						var marker = library.getMarkerAt(pos);
 						if (marker) {
 							console.log('Moving to position');
-							marker.moveTo(pos);
+							//marker.moveTo(pos);
 				       		}
 					});
 
