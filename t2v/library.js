@@ -42,6 +42,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			color = color || defaultMarkerColor;
 			var newMarker = marker(markers.length, polygonContext, position, markerWidth, markerHeight, defaultMarkerColor);
 			markers.push(newMarker);
+			update();
 		},
 		drawPolygonFill = function(color) {
 			if (markers.length == 0) {
@@ -76,6 +77,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			return vertices;
 		};
 
+		var update = function() {
+				clearCanvas();
+				drawPolygonFill();
+				drawMarkers();
+			};
 		return {
 			width: width,
 			height: height,
@@ -90,11 +96,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 					}
 				}
 			},
-			update: function() {
-				clearCanvas();
-				drawPolygonFill();
-				drawMarkers();
-			},
+			update: update,
 			moveMarker: function(marker, position) {
 				markers[marker.index].moveTo(position);
 			}
