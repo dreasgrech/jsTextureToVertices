@@ -1,12 +1,18 @@
-var marker = function(context, position, width, height, defaultColor) {
+var marker = function(index, context, position, width, height, defaultColor) {
 	var pos = position;
 	var boundingBox = function() {
-		var topLeft = {x: pos.x - width/2, y: pos.y - height/2};
+		var topLeft = {
+			x: pos.x - width / 2,
+			y: pos.y - height / 2
+		};
 		return rectangle(topLeft.x, topLeft.y, width, height);
 	};
 
 	return {
-		position: pos,
+		index: index,
+		position: function () {
+			return pos;
+		},
 		boundingBox: boundingBox,
 		draw: function(color) {
 			context.fillStyle = color || defaultColor;
@@ -15,10 +21,10 @@ var marker = function(context, position, width, height, defaultColor) {
 		},
 		moveTo: function(newPosition) {
 			pos = newPosition;
-			console.log(pos);
 		},
-		isPointOn: function (point) {
+		isPointOn: function(point) {
 			return boundingBox().contains(point);
 		}
 	};
 };
+

@@ -1,15 +1,13 @@
-var t2v = function(canvas, context, image, maxVertices, callback) {
-	var markerFilename = "marker.png",
-	markerWidth = 20,
+var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, image, maxVertices, callback) {
+	var markerWidth = 10,
 	markerHeight = markerWidth,
 	defaultMarkerColor = '#FF0000',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
 	scale = 1,
 	library, width, height, markers = [];
 
-
 	var clearCanvas = function() {
-		context.clearRect(0, 0, width, height);
+		polygonContext.clearRect(0, 0, width, height);
 	};
 
 	var drawMainImage = function(callback) {
@@ -18,8 +16,10 @@ var t2v = function(canvas, context, image, maxVertices, callback) {
 			width = im.width * scale;
 			height = im.height * scale;
 
-			canvas.width = width;
-			canvas.height = height;
+			imageCanvas.width = width;
+			imageCanvas.height = height;
+			polygonCanvas.width = width;
+			polygonCanvas.height = height;
 
 			library = initializer();
 			library.drawImage(im, {
@@ -33,32 +33,30 @@ var t2v = function(canvas, context, image, maxVertices, callback) {
 	},
 	initializer = function() {
 		var drawImage = function(image, position, width, height) {
-			context.drawImage(image, position.x, position.y, width, height);
+			imageContext.drawImage(image, position.x, position.y, width, height);
 		},
 		addMarker = function(position, color) {
 			if (markers.length + 1 > maxVertices) {
 				return;
 			}
 			color = color || defaultMarkerColor;
-			var newMarker = marker(context, position, markerWidth, markerHeight, defaultMarkerColor);
+			var newMarker = marker(markers.length, polygonContext, position, markerWidth, markerHeight, defaultMarkerColor);
 			markers.push(newMarker);
-			clearCanvas();
-			drawMainImage(function(l) {
-				drawPolygonFill();
-				drawMarkers();
-			});
 		},
 		drawPolygonFill = function(color) {
+			if (markers.length == 0) {
+				return;
+			}
 			color = color || defaultFillColor;
 			var i;
-			context.fillStyle = color;
-			context.beginPath();
-			context.moveTo(markers[0].position.x, markers[0].position.y);
+			polygonContext.fillStyle = color;
+			polygonContext.beginPath();
+			polygonContext.moveTo(markers[0].position().x, markers[0].position().y);
 			for (i = 1; i < markers.length; ++i) {
-				context.lineTo(markers[i].position.x, markers[i].position.y);
+				polygonContext.lineTo(markers[i].position().x, markers[i].position().y);
 			}
-			context.closePath();
-			context.fill();
+			polygonContext.closePath();
+			polygonContext.fill();
 		},
 		drawMarkers = function() {
 			var i;
@@ -71,8 +69,8 @@ var t2v = function(canvas, context, image, maxVertices, callback) {
 			var i, vertices = [];
 			for (i = 0; i < markers.length; ++i) {
 				vertices.push({
-					x: markers[i].position.x * scale,
-					y: markers[i].position.y * scale
+					x: markers[i].position().x * scale,
+					y: markers[i].position().y * scale
 				});
 			}
 			return vertices;
@@ -91,6 +89,14 @@ var t2v = function(canvas, context, image, maxVertices, callback) {
 						return markers[i];
 					}
 				}
+			},
+			update: function() {
+				clearCanvas();
+				drawPolygonFill();
+				drawMarkers();
+			},
+			moveMarker: function(marker, position) {
+				markers[marker.index].moveTo(position);
 			}
 		};
 	};
