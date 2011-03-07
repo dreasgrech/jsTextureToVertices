@@ -11,23 +11,27 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		polygonContext.clearRect(0, 0, width, height);
 	};
 
+	var drawLoadedImage = function(im) {
+		width = im.width * scale;
+		height = im.height * scale;
+
+		imageCanvas.width = width;
+		imageCanvas.height = height;
+		polygonCanvas.width = width;
+		polygonCanvas.height = height;
+
+		library = initializer();
+		library.drawImage(im, {
+			x: 0,
+			y: 0
+		},
+		width, height);
+	};
+
 	var drawMainImage = function(callback) {
-		var im = new Image();
+		var im = document.createElement("img"); // like calling new Image();
 		im.onload = function() {
-			width = im.width * scale;
-			height = im.height * scale;
-
-			imageCanvas.width = width;
-			imageCanvas.height = height;
-			polygonCanvas.width = width;
-			polygonCanvas.height = height;
-
-			library = initializer();
-			library.drawImage(im, {
-				x: 0,
-				y: 0
-			},
-			width, height);
+			drawLoadedImage(im);
 			callback(library);
 		};
 		im.src = image;
@@ -107,6 +111,20 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			},
 			getMarkers: function() {
 				return markers;
+			},
+			loadNewImage: function(clientImage) {
+				var img = document.createElement("img");
+				img.id = "pic";
+				img.file = clientImage;
+
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					img.onload = function() {
+						drawLoadedImage(img);
+					};
+					img.src = e.target.result;
+				};
+				reader.readAsDataURL(clientImage);
 			}
 		};
 	};

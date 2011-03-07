@@ -1,5 +1,5 @@
 (function() {
-	var imageFilename = "images/block.png";
+	var imageFilename = "images/dragDrop.png";
 	var imageCanvas = document.getElementById('imageCanvas'),
 	polygonCanvas = document.getElementById('polygonCanvas'),
 	verticesList = document.getElementById('vertices');
@@ -48,6 +48,27 @@
 				}
 				displayVertices(library.getVertices());
 			});
+
+			polygonCanvas.addEventListener("dragover", function(e) {
+				e.preventDefault();
+			},
+			true);
+			
+			polygonCanvas.addEventListener("drop", function(e) {
+				e.preventDefault();
+				var im = e.dataTransfer.files[0];
+				loadNewImage(im);
+			},
+			true);
+
+			var loadNewImage = function (clientImage) {
+				if (!clientImage.type.match(/image.*/)) { // something that's not an image
+					alert('Wtf is that?');
+					return;
+				}
+				library.loadNewImage(clientImage);
+
+			};
 		});
 
 		var displayVertices = function(vertices) {
