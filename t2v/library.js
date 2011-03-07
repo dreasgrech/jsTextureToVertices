@@ -9,6 +9,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 
 	var clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
+	},
+	clearMarkers = function(markers) {
+		markers.length = 0;
 	};
 
 	var drawLoadedImage = function(im) {
@@ -109,6 +112,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			moveMarker: function(marker, position) {
 				markers[marker.index].moveTo(position);
 			},
+			clearMarkers: clearMarkers,
 			getMarkers: function() {
 				return markers;
 			},
@@ -121,6 +125,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				reader.onload = function(e) {
 					img.onload = function() {
 						drawLoadedImage(img);
+						clearMarkers(markers);
 					};
 					img.src = e.target.result;
 				};
