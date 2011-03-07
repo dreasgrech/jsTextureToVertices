@@ -2,6 +2,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 	var markerWidth = 5,
 	markerHeight = markerWidth,
 	defaultMarkerColor = '#FF0000',
+	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
 	scale = 1,
 	library, width, height, markers = [];
@@ -62,7 +63,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		drawMarkers = function() {
 			var i;
 			for (i = 0; i < markers.length; ++i) {
-				markers[i].draw();
+				if (i == markers.length - 1) { // last marker
+					markers[i].draw(defaultLastMarkerColor);
+				} else {
+					markers[i].draw();
+				}
 			}
 
 		},
@@ -78,10 +83,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		};
 
 		var update = function() {
-				clearCanvas();
-				drawPolygonFill();
-				drawMarkers();
-			};
+			clearCanvas();
+			drawPolygonFill();
+			drawMarkers();
+		};
 		return {
 			width: width,
 			height: height,
@@ -99,7 +104,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			update: update,
 			moveMarker: function(marker, position) {
 				markers[marker.index].moveTo(position);
-			}, getMarkers: function () {
+			},
+			getMarkers: function() {
 				return markers;
 			}
 		};
