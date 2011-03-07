@@ -1,5 +1,5 @@
 var mouse = function(el) {
-	var position, moveAction, dragAction, clickAction, isLeftClicked = false,
+	var position, moveAction, dragAction, dragStartAction, dragCompleteAction, clickAction, isLeftClicked = false,
 	isDragging = false;
 
 	var getPosition = function(e) {
@@ -12,6 +12,9 @@ var mouse = function(el) {
 	el.addEventListener("mousemove", function(e) {
 		position = getPosition(e);
 		if (isLeftClicked && dragAction) {
+			if (!isDragging && dragStartAction) { // starting a drag
+				dragStartAction(position);
+			}
 			isDragging = true;
 			dragAction(position);
 		}
@@ -28,12 +31,17 @@ var mouse = function(el) {
 	false);
 
 	el.addEventListener("mouseup", function(e) {
-			//console.log(isDragging);
-		if (!isDragging && clickAction) {
+		//console.log(isDragging);
+		isLeftClicked = false;
+		if (dragCompleteAction && isDragging) {
+			isDragging = false;
+			dragCompleteAction(getPosition(e));
+			return false;
+		}
+
+		if (clickAction) {
 			clickAction(getPosition(e));
 		}
-		isDragging = false;
-		isLeftClicked = false;
 		return false;
 	},
 	false);
@@ -58,8 +66,13 @@ var mouse = function(el) {
 		},
 		drag: function(action) {
 			dragAction = action;
+		},
+		dragComplete: function(action) {
+			dragCompleteAction = action;
+		},
+		dragStart: function(action) {
+			dragStartAction = action;
 		}
-
 	};
 };
 

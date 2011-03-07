@@ -29,11 +29,22 @@
 				}
 			});
 
-			mouseInput.drag(function(pos) {
+			var draggingVertex;
+
+			mouseInput.dragStart(function(pos) {
 				var marker = library.getMarkerAt(pos);
 				if (marker) {
-					library.moveMarker(marker, pos);
-					//marker.moveTo(pos);
+					draggingVertex = marker;
+				}
+			});
+
+			mouseInput.dragComplete(function(pos) {
+				draggingVertex = null;
+			});
+
+			mouseInput.drag(function(pos) {
+				if (draggingVertex) {
+					library.moveMarker(draggingVertex, pos);
 				}
 				displayVertices(library.getVertices());
 			});
