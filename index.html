@@ -19,22 +19,17 @@
 			    polygonCanvas = document.getElementById('polygonCanvas');
 
 			if (imageCanvas.getContext && polygonCanvas.getContext) {
-				// Initaliase a 2-dimensional drawing context
 				var imageContext = imageCanvas.getContext('2d'),
 				    polygonContext = polygonCanvas.getContext('2d');
-				//Canvas commands go here
+
 				var maxVertices = 10;
 				t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function (library) {
-					polygonCanvas.addEventListener("click", function(e) {
-						var position = {
-							x: e.clientX - imageCanvas.offsetLeft,
-							y: e.clientY - imageCanvas.offsetTop
-						};
-						library.addMarker(position);
-
-					}, false);
-
 					var mouseInput = mouse(polygonCanvas);
+
+					mouseInput.click(function (position) {
+						library.addMarker(position);
+					});
+
 					mouseInput.move(function (pos) {
 						library.update();
 						if (library.getMarkerAt(pos)) {
@@ -43,6 +38,7 @@
 							polygonCanvas.style.cursor = 'default';
 						}
 					});
+
 					mouseInput.drag(function (pos) {
 						var marker = library.getMarkerAt(pos);
 						if (marker) {
@@ -51,11 +47,6 @@
 				       		}
 					});
 				});
-
-
-
-
-
 			}
 		</script>
 	</body>

@@ -1,5 +1,5 @@
 var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, image, maxVertices, callback) {
-	var markerWidth = 10,
+	var markerWidth = 5,
 	markerHeight = markerWidth,
 	defaultMarkerColor = '#FF0000',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
