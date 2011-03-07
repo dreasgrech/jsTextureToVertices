@@ -9,14 +9,19 @@
 			<canvas id="imageCanvas" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
 			<canvas id="polygonCanvas" width="100" height="100" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
 		</div>
+		<div id="vertices" style="position: absolute; top: 20; left: 800; width: 200px; height: 200px;">
+
+		</div>
 		<script src="t2v/mouse.js"></script>
 		<script src="t2v/rectangle.js"></script>
 		<script src="t2v/marker.js"></script>
 		<script src="t2v/library.js"></script>
 		<script>
+			(function () {
 			var imageFilename = "images/block.png";
 			var imageCanvas = document.getElementById('imageCanvas'), 
-			    polygonCanvas = document.getElementById('polygonCanvas');
+				polygonCanvas = document.getElementById('polygonCanvas'),
+				verticesList = document.getElementById('vertices');
 
 			if (imageCanvas.getContext && polygonCanvas.getContext) {
 				var imageContext = imageCanvas.getContext('2d'),
@@ -28,6 +33,7 @@
 
 					mouseInput.click(function (position) {
 						library.addMarker(position);
+						displayVertices(library.getVertices());
 					});
 
 					mouseInput.move(function (pos) {
@@ -45,9 +51,20 @@
 							library.moveMarker(marker, pos);
 							//marker.moveTo(pos);
 				       		}
+						displayVertices(library.getVertices());
 					});
 				});
+
+				var displayVertices = function (vertices) {
+					var output = [], i, vertex;
+					for (i = 0; i < vertices.length; ++i) {
+						vertex = vertices[i];
+						output.push(vertex.x);
+					}
+					verticesList.innerHTML = output.join('<br/>');
+				};
 			}
+		}());
 		</script>
 	</body>
 

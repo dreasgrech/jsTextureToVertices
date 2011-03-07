@@ -99,6 +99,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			update: update,
 			moveMarker: function(marker, position) {
 				markers[marker.index].moveTo(position);
+			}, getMarkers: function () {
+				return markers;
 			}
 		};
 	};
