@@ -59,7 +59,7 @@
 					var output = [], i, vertex;
 					for (i = 0; i < vertices.length; ++i) {
 						vertex = vertices[i];
-						output.push(vertex.x);
+						output.push('(' + vertex.x + ', ' + vertex.y + ')');
 					}
 					verticesList.innerHTML = output.join('<br/>');
 				};
