@@ -32,8 +32,11 @@
 					var mouseInput = mouse(polygonCanvas);
 
 					mouseInput.click(function (position) {
-						library.addMarker(position);
-						displayVertices(library.getVertices());
+						var markerAtClickPosition = library.getMarkerAt(position);
+						if (!markerAtClickPosition) {
+							library.addMarker(position);
+							displayVertices(library.getVertices());
+					}
 					});
 
 					mouseInput.move(function (pos) {
