@@ -2,7 +2,7 @@
 	var imageFilename = "images/dragDrop.png";
 	var imageCanvas = document.getElementById('imageCanvas'),
 	polygonCanvas = document.getElementById('polygonCanvas'),
-	verticesList = document.getElementById('vertices');
+	verticesList = document.getElementById('verticesList');
 
 	if (imageCanvas.getContext && polygonCanvas.getContext) {
 		var imageContext = imageCanvas.getContext('2d'),
@@ -11,8 +11,6 @@
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
 			var mouseInput = mouse(polygonCanvas),
 			draggingVertex;
-
-			setInterval(library.update, 50);
 
 			mouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
@@ -70,18 +68,38 @@
 				}
 				library.loadNewImage(clientImage);
 			};
-		});
 
-		var displayVertices = function(vertices) {
-			var output = [],
-			i,
-			vertex;
-			for (i = 0; i < vertices.length; ++i) {
-				vertex = vertices[i].position();
-				output.push('(' + vertex.x + ', ' + vertex.y + ')');
-			}
-			verticesList.innerHTML = output.join('<br/>');
-		};
+			var verticesShower = widget({
+				x: 200,
+				y: 200
+			},
+			'YEAAAA', 'verticesHeader');
+
+			var displayVertices = function(vertices) {
+				var output = [],
+				i,
+				vertex;
+				var list = verticesShower.getContentContainer();
+				list.innerHTML = "";
+				for (i = 0; i < vertices.length; ++i) {
+					vertex = vertices[i].position();
+					var container = document.createElement("div");
+					container.className = 'marker';
+					if (vertices[i].isSelected()) {
+						container.className += ' markerSelect';
+					}
+					container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
+
+					list.appendChild(container);
+				}
+			};
+
+			setInterval(library.update, 50);
+			setInterval(function() {
+				displayVertices(library.getVertices());
+			},
+			100);
+		});
 	}
 } ());
 

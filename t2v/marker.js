@@ -50,6 +50,8 @@ var marker = function(index, context, position, width, height, defaultColor) {
 		},
 		unselect: function() {
 		     isSelected = false;
+		}, isSelected : function () {
+			return isSelected;
 		}
 	};
 };
