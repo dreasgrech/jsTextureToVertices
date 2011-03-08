@@ -6,11 +6,11 @@
 
 	if (imageCanvas.getContext && polygonCanvas.getContext) {
 		var imageContext = imageCanvas.getContext('2d'),
-		polygonContext = polygonCanvas.getContext('2d');
+		polygonContext = polygonCanvas.getContext('2d'),
+		maxVertices = 50; // https://github.com/dreasgrech/jsTextureToVertices/issues/2
 
-		var maxVertices = 50;
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
-			var mouseInput = mouse(polygonCanvas);
+			var mouseInput = mouse(polygonCanvas), draggingVertex;
 
 			mouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
@@ -28,8 +28,6 @@
 					polygonCanvas.style.cursor = 'default';
 				}
 			});
-
-			var draggingVertex;
 
 			mouseInput.dragStart(function(pos) {
 				var marker = library.getMarkerAt(pos);
@@ -53,7 +51,7 @@
 				e.preventDefault();
 			},
 			true);
-			
+
 			polygonCanvas.addEventListener("drop", function(e) {
 				e.preventDefault();
 				var im = e.dataTransfer.files[0];
@@ -61,7 +59,7 @@
 			},
 			true);
 
-			var loadNewImage = function (clientImage) {
+			var loadNewImage = function(clientImage) {
 				if (!clientImage.type.match(/image.*/)) { // something that's not an image
 					alert('Wtf is that?');
 					return;
@@ -82,4 +80,3 @@
 		};
 	}
 } ());
-

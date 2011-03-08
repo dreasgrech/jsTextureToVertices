@@ -1,6 +1,6 @@
 var marker = function(index, context, position, width, height, defaultColor) {
-	var pos = position;
-	var boundingBox = function() {
+	var pos = position,
+	boundingBox = function() {
 		var topLeft = {
 			x: pos.x - width / 2,
 			y: pos.y - height / 2
@@ -15,8 +15,8 @@ var marker = function(index, context, position, width, height, defaultColor) {
 		},
 		boundingBox: boundingBox,
 		draw: function(color) {
-			context.fillStyle = color || defaultColor;
 			var bounds = boundingBox();
+			context.fillStyle = color || defaultColor;
 			context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
 		},
 		moveTo: function(newPosition) {

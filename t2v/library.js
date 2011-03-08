@@ -5,16 +5,14 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
 	scale = 1,
-	library, width, height, markers = [];
-
-	var clearCanvas = function() {
+	library, width, height, markers = [],
+	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
 	clearMarkers = function(markers) {
 		markers.length = 0;
-	};
-
-	var drawLoadedImage = function(im) {
+	},
+	drawLoadedImage = function(im) {
 		width = im.width * scale;
 		height = im.height * scale;
 
@@ -29,9 +27,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			y: 0
 		},
 		width, height);
-	};
-
-	var drawMainImage = function(callback) {
+	},
+	drawMainImage = function(callback) {
 		var im = document.createElement("img"); // like calling new Image();
 		im.onload = function() {
 			drawLoadedImage(im);
@@ -48,7 +45,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				return;
 			}
 			color = color || defaultMarkerColor;
-			var newMarker = marker(markers.length, polygonContext, position, markerWidth, markerHeight, defaultMarkerColor);
+			var newMarker = marker(markers.length, polygonContext, position, markerWidth, markerHeight, color);
 			markers.push(newMarker);
 			update();
 		},
@@ -87,13 +84,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				});
 			}
 			return vertices;
-		};
-
-		var update = function() {
+		},
+		update = function() {
 			clearCanvas();
 			drawPolygonFill();
 			drawMarkers();
 		};
+
 		return {
 			width: width,
 			height: height,
@@ -117,11 +114,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				return markers;
 			},
 			loadNewImage: function(clientImage) {
-				var img = document.createElement("img");
+				var img = document.createElement("img"), reader;
 				img.id = "pic";
 				img.file = clientImage;
 
-				var reader = new FileReader();
+				reader = new FileReader();
 				reader.onload = function(e) {
 					img.onload = function() {
 						drawLoadedImage(img);
@@ -136,4 +133,3 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 
 	drawMainImage(callback);
 };
-
