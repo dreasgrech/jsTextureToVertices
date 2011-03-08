@@ -67,7 +67,6 @@
 					return;
 				}
 				library.loadNewImage(clientImage);
-
 			};
 		});
 
