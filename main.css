@@ -1,5 +1,4 @@
 .marker { 
-	width: 100px;
 	background-color: #F5B800;
 	text-align:center;
 }
@@ -16,6 +15,5 @@
 	background-color: #707070;
 	color: white;
 	text-align:center;
-	width: 100px;
 	cursor : move;
 }

@@ -47,6 +47,13 @@
 					library.moveMarker(draggingVertex, pos);
 				}
 				displayVertices(library.getVertices());
+
+				console.log(box.x);
+				console.log(pos.x);
+				console.log('');
+				if (box.contains(pos)) {
+					console.log('s');
+					}
 			});
 
 			polygonCanvas.addEventListener("dragover", function(e) {
@@ -69,17 +76,20 @@
 				library.loadNewImage(clientImage);
 			};
 
-			var verticesShower = widget({
+			var verticesWidget = widget({
 				x: 200,
 				y: 200
-			},
+			}, 100,
 			'YEAAAA', 'verticesHeader');
+
+			var box = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight);
+
 
 			var displayVertices = function(vertices) {
 				var output = [],
 				i,
 				vertex;
-				var list = verticesShower.getContentContainer();
+				var list = verticesWidget.getContentContainer();
 				list.innerHTML = "";
 				for (i = 0; i < vertices.length; ++i) {
 					vertex = vertices[i].position();
