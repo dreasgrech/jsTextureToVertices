@@ -76,14 +76,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 
 		},
 		getVertices = function() {
-			var i, vertices = [];
-			for (i = 0; i < markers.length; ++i) {
-				vertices.push({
-					x: markers[i].position().x * scale,
-					y: markers[i].position().y * scale
-				});
-			}
-			return vertices;
+			return markers;
 		},
 		update = function() {
 			clearCanvas();

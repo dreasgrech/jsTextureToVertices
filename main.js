@@ -77,7 +77,7 @@
 			i,
 			vertex;
 			for (i = 0; i < vertices.length; ++i) {
-				vertex = vertices[i];
+				vertex = vertices[i].position();
 				output.push('(' + vertex.x + ', ' + vertex.y + ')');
 			}
 			verticesList.innerHTML = output.join('<br/>');
