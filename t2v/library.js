@@ -1,5 +1,5 @@
 var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, image, maxVertices, callback) {
-	var markerWidth = 5,
+	var markerWidth = 3,
 	markerHeight = markerWidth,
 	defaultMarkerColor = '#FF0000',
 	defaultLastMarkerColor = '#002EB8',
@@ -92,8 +92,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		};
 
 		return {
-			width: width,
-			height: height,
+			getWidth: function() {
+				return width;
+			},
+			getHeight: function () {
+				return height;
+		   	},
 			drawImage: drawImage,
 			addMarker: addMarker,
 			getVertices: getVertices,
@@ -114,7 +118,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				return markers;
 			},
 			loadNewImage: function(clientImage) {
-				var img = document.createElement("img"), reader;
+				if (!clientImage.toString().indexOf("File]")) { 
+					throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
+				}
+
+				var img = document.createElement("img"),
+				reader;
 				img.id = "pic";
 				img.file = clientImage;
 
@@ -133,3 +142,4 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 
 	drawMainImage(callback);
 };
+

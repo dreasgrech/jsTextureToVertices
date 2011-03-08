@@ -55,6 +55,7 @@
 			polygonCanvas.addEventListener("drop", function(e) {
 				e.preventDefault();
 				var im = e.dataTransfer.files[0];
+				alert(im);
 				loadNewImage(im);
 			},
 			true);
