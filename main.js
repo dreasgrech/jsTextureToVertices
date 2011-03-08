@@ -8,20 +8,24 @@
 		var imageContext = imageCanvas.getContext('2d'),
 		polygonContext = polygonCanvas.getContext('2d'),
 		maxVertices = 50; // https://github.com/dreasgrech/jsTextureToVertices/issues/2
-
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
-			var mouseInput = mouse(polygonCanvas), draggingVertex;
+			var mouseInput = mouse(polygonCanvas),
+			draggingVertex;
+
+			setInterval(library.update, 50);
 
 			mouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
-				if (!markerAtClickPosition) {
-					library.addMarker(position);
-					displayVertices(library.getVertices());
+				if (markerAtClickPosition) {
+					library.setSelectedMarker(markerAtClickPosition);
+					return;
 				}
+
+				library.addMarker(position);
+				displayVertices(library.getVertices());
 			});
 
 			mouseInput.move(function(pos) {
-				library.update();
 				if (library.getMarkerAt(pos)) {
 					polygonCanvas.style.cursor = 'pointer';
 				} else {
@@ -80,3 +84,4 @@
 		};
 	}
 } ());
+

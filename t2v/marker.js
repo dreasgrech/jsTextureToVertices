@@ -1,5 +1,6 @@
 var marker = function(index, context, position, width, height, defaultColor) {
 	var pos = position,
+	defaultSelectedColor = '#70E000',
 	isSelected = false,
 	boundingBox = function() {
 		var topLeft = {
@@ -12,6 +13,16 @@ var marker = function(index, context, position, width, height, defaultColor) {
 		// This function is for debugging purposes
 		context.fillStyle = 'rgba(0, 0, 200, 0.5)';
 		context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+	},
+	drawSelectedHighlighter = function(color) {
+		drawCircle(pos, width + 2, color || defaultSelectedColor);
+	},
+	drawCircle = function(position, radius, color) {
+		context.fillStyle = color;
+		context.beginPath();
+		context.arc(position.x, position.y, radius, 0, Math.PI * 2, true);
+		context.closePath();
+		context.fill();
 	};
 
 	return {
@@ -21,14 +32,11 @@ var marker = function(index, context, position, width, height, defaultColor) {
 		},
 		boundingBox: boundingBox,
 		draw: function(color) {
-			var bounds = boundingBox();
-			context.fillStyle = color || defaultColor;
+			if (isSelected) {
+				drawSelectedHighlighter();
+			}
 
-			context.beginPath();
-			context.arc(pos.x, pos.y, width, 0, Math.PI * 2, true);
-			context.closePath();
-			context.fill();
-
+			drawCircle(pos, width, color || defaultColor);
 		},
 		moveTo: function(newPosition) {
 			pos = newPosition;
@@ -36,11 +44,12 @@ var marker = function(index, context, position, width, height, defaultColor) {
 		isPointOn: function(point) {
 			return boundingBox().contains(point);
 		},
-		setSelected: function() {
+		select: function() {
+		     isSelected = true;
 
 		},
-		isSelected: function() {
-
+		unselect: function() {
+		     isSelected = false;
 		}
 	};
 };

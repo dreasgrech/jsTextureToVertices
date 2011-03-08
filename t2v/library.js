@@ -113,6 +113,16 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			moveMarker: function(marker, position) {
 				markers[marker.index].moveTo(position);
 			},
+setSelectedMarker: function (marker) {
+			   for (var i = 0; i < markers.length; ++i) {
+				   if (markers[i] == marker) {
+					   markers[i].select();
+					   continue;
+				   }
+					   markers[i].unselect();
+			   }
+
+		   },
 			clearMarkers: clearMarkers,
 			getMarkers: function() {
 				return markers;
