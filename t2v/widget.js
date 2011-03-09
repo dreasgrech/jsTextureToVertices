@@ -3,12 +3,16 @@ var widget = function(position, width, headerText, headerClassName) {
 	headerHeight = 20,
 	container = document.createElement("div"),
 	header = document.createElement("div"),
-	content = document.createElement("div");
+	content = document.createElement("div"),
+	setNewPosition = function(newPosition) {
+		pos = newPosition;
+		container.style.left = newPosition.x;
+		container.style.top = newPosition.y;
+	}
 
 	container.style.position = 'absolute';
 	container.style.width = width + 'px';
-	container.style.left = pos.x;
-	container.style.top = pos.y;
+	setNewPosition(pos);
 	header.style.height = headerHeight + 'px';
 	container.appendChild(header);
 	container.appendChild(content);
@@ -25,7 +29,7 @@ var widget = function(position, width, headerText, headerClassName) {
 			return pos;
 		},
 		moveTo: function(position) {
-			pos = position;
+				setNewPosition(position);
 		},
 		getWidth: function() {
 			return width;

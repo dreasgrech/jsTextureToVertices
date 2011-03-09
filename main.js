@@ -9,7 +9,8 @@
 		polygonContext = polygonCanvas.getContext('2d'),
 		maxVertices = 50; // https://github.com/dreasgrech/jsTextureToVertices/issues/2
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
-			var mouseInput = mouse(polygonCanvas),
+			//var mouseInput = mouse(polygonCanvas),
+			var mouseInput = mouse(document.body),
 			draggingVertex;
 
 			mouseInput.click(function(position) {
@@ -48,12 +49,9 @@
 				}
 				displayVertices(library.getVertices());
 
-				console.log(box.x);
-				console.log(pos.x);
-				console.log('');
-				if (box.contains(pos)) {
-					console.log('s');
-					}
+				if (rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()).contains(pos)) {
+					verticesWidget.moveTo(pos);
+				}
 			});
 
 			polygonCanvas.addEventListener("dragover", function(e) {
@@ -77,13 +75,10 @@
 			};
 
 			var verticesWidget = widget({
-				x: 200,
+				x: 600,
 				y: 200
-			}, 100,
-			'YEAAAA', 'verticesHeader');
-
-			var box = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight);
-
+			},
+			100, 'YEAAAA', 'verticesHeader');
 
 			var displayVertices = function(vertices) {
 				var output = [],
