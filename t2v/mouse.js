@@ -10,10 +10,11 @@ var mouse = function(el) {
 	};
 
 	el.addEventListener("mousemove", function(e) {
-		position = getPosition(e);
+		var newPosition = getPosition(e);//, oldPosition = { x: position.x, y: position.y };
+		position = newPosition;
 		if (isLeftClicked && dragAction) {
 			if (!isDragging && dragStartAction) { // starting a drag
-				dragStartAction(position);
+				dragStartAction(position/*, oldPosition*/);
 			}
 			isDragging = true;
 			dragAction(position);

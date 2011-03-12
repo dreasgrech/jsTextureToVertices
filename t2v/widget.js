@@ -1,5 +1,5 @@
-var widget = function(position, width, headerText, headerClassName) {
-	var pos = position,
+var widget = function(initialPosition, width, headerText, headerClassName) {
+	var pos = initialPosition,
 	headerHeight = 20,
 	container = document.createElement("div"),
 	header = document.createElement("div"),
@@ -8,7 +8,10 @@ var widget = function(position, width, headerText, headerClassName) {
 		pos = newPosition;
 		container.style.left = newPosition.x;
 		container.style.top = newPosition.y;
-	}
+	},
+	moveFromTopLeft = function(position) {
+		setNewPosition(position);
+	};
 
 	container.style.position = 'absolute';
 	container.style.width = width + 'px';
@@ -28,9 +31,7 @@ var widget = function(position, width, headerText, headerClassName) {
 		position: function() {
 			return pos;
 		},
-		moveTo: function(position) {
-				setNewPosition(position);
-		},
+		moveFromTopLeft: moveFromTopLeft,
 		getWidth: function() {
 			return width;
 		},
