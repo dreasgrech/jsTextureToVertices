@@ -1,4 +1,4 @@
-var marker = function(index, context, position, width, height, defaultColor) {
+var marker = function(context, position, width, height, defaultColor) {
 	var pos = position,
 	defaultSelectedColor = '#70E000',
 	isSelected = false,
@@ -26,7 +26,6 @@ var marker = function(index, context, position, width, height, defaultColor) {
 	};
 
 	return {
-		index: index,
 		position: function() {
 			return pos;
 		},

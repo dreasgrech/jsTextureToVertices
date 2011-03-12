@@ -40,13 +40,18 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		var drawImage = function(image, position, width, height) {
 			imageContext.drawImage(image, position.x, position.y, width, height);
 		},
-		addMarker = function(position, color) {
+		addMarker = function(position, color, collectionIndex) {
+			if (typeof collectionIndex === "undefined") {
+				collectionIndex = markers.length;
+			}
+
 			if (markers.length + 1 > maxVertices) {
 				return;
 			}
+
 			color = color || defaultMarkerColor;
-			var newMarker = marker(markers.length, polygonContext, position, markerWidth, markerHeight, color);
-			markers.push(newMarker);
+			var newMarker = marker(polygonContext, position, markerWidth, markerHeight, color);
+			markers.splice(collectionIndex, 0, newMarker);
 			update();
 		},
 		drawPolygonFill = function(color) {
@@ -58,22 +63,20 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			polygonContext.fillStyle = color;
 			polygonContext.beginPath();
 			polygonContext.moveTo(markers[0].position().x, markers[0].position().y);
-			for (i = 1; i < markers.length; ++i) {
-				polygonContext.lineTo(markers[i].position().x, markers[i].position().y);
-			}
+			iterateMarkers(function(marker) {
+				polygonContext.lineTo(marker.position().x, marker.position().y);
+			});
 			polygonContext.closePath();
 			polygonContext.fill();
 		},
 		drawMarkers = function() {
-			var i;
-			for (i = 0; i < markers.length; ++i) {
+			iterateMarkers(function(marker, i) {
 				if (i == markers.length - 1) { // last marker
-					markers[i].draw(defaultLastMarkerColor);
+					marker.draw(defaultLastMarkerColor);
 				} else {
-					markers[i].draw();
+					marker.draw();
 				}
-			}
-
+			});
 		},
 		getVertices = function() {
 			return markers;
@@ -82,46 +85,73 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			clearCanvas();
 			drawPolygonFill();
 			drawMarkers();
+		},
+		iterateMarkers = function(action) {
+			var i = 0,
+			j = markers.length,
+			stop;
+			for (; i < j; ++i) {
+				if (stop = action(markers[i], i)) {
+					return stop;
+				}
+			}
+		},
+		iterateEdges = function(action) {
+			var i = 0,
+			j = markers.length,
+			nextVertex, stop;
+
+			return iterateMarkers(function(marker, index) {
+				nextVertex = (index + 1) % j;
+				if (stop = action(markers[index], markers[nextVertex])) {
+					return stop;
+				}
+
+			});
+		},
+		getMarkerIndex = function(marker) {
+			return iterateMarkers(function(m, index) {
+				if (m === marker) return index;
+			});
 		};
 
 		return {
 			getWidth: function() {
 				return width;
 			},
-			getHeight: function () {
+			getHeight: function() {
 				return height;
-		   	},
+			},
 			drawImage: drawImage,
 			addMarker: addMarker,
+			addMarkerBetween: function(marker1, marker2, position) {
+				var marker1Index = getMarkerIndex(marker1), marker2Index = getMarkerIndex(marker2);
+				addMarker(position, '', Math.min(marker1Index, marker2Index) + 1);
+			},
 			getVertices: getVertices,
 			getMarkerAt: function(position) {
-				var i;
-				for (i = 0; i < markers.length; ++i) {
-					if (markers[i].isPointOn(position)) {
-						return markers[i];
+				return iterateMarkers(function(marker) {
+					if (marker.isPointOn(position)) {
+						return marker;
 					}
-				}
+				});
 			},
 			update: update,
-			moveMarker: function(marker, position) {
-				markers[marker.index].moveTo(position);
+			setSelectedMarker: function(marker) {
+				iterateMarkers(function(m) {
+					if (m == marker) {
+						m.select();
+						return;
+					}
+					m.unselect();
+				});
 			},
-setSelectedMarker: function (marker) {
-			   for (var i = 0; i < markers.length; ++i) {
-				   if (markers[i] == marker) {
-					   markers[i].select();
-					   continue;
-				   }
-					   markers[i].unselect();
-			   }
-
-		   },
 			clearMarkers: clearMarkers,
 			getMarkers: function() {
 				return markers;
 			},
 			loadNewImage: function(clientImage) {
-				if (!clientImage.toString().indexOf("File]")) { 
+				if (!clientImage.toString().indexOf("File]")) {
 					throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
 				}
 
@@ -139,6 +169,15 @@ setSelectedMarker: function (marker) {
 					img.src = e.target.result;
 				};
 				reader.readAsDataURL(clientImage);
+			},
+			isPointOnEdge: function(point) {
+				var isIt = false;
+				point = vector2(point);
+				return iterateEdges(function(vertex1, vertex2) {
+					if (point.isOnLine([vertex1.position(), vertex2.position()])) {
+						return [vertex1, vertex2];
+					}
+				});
 			}
 		};
 	};

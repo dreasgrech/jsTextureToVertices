@@ -18,10 +18,17 @@
 
 			mouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
-				if (markerAtClickPosition) {
+				if (markerAtClickPosition) { // A marker was clicked, so select it
 					library.setSelectedMarker(markerAtClickPosition);
 					return;
 				}
+
+				var edge = library.isPointOnEdge(position);
+				if (edge) {
+					library.addMarkerBetween(edge[0], edge[1], position);
+					return;
+				}
+
 
 				library.addMarker(position);
 				displayVertices(library.getVertices());
@@ -34,6 +41,7 @@
 				} else {
 					polygonCanvas.style.cursor = 'default';
 				}
+
 			});
 
 			mouseInput.dragStart(function(pos) {
@@ -57,7 +65,7 @@
 			mouseInput.drag(function(pos) {
 				var widgetNewPosition;
 				if (draggingVertex) { // currently dragging a vertex
-					library.moveMarker(draggingVertex, pos);
+					draggingVertex.moveTo(pos);
 				}
 				displayVertices(library.getVertices());
 
@@ -109,6 +117,7 @@
 
 					list.appendChild(container);
 				}
+
 				xyShow = document.createElement("div");
 				var pos = mouseInput.position();
 				xyShow.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
