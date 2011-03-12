@@ -1,5 +1,5 @@
 (function() {
-	var imageFilename = "images/dragDrop.png";
+	var imageFilename = "images/block.png";
 	var imageCanvas = document.getElementById('imageCanvas'),
 	polygonCanvas = document.getElementById('polygonCanvas'),
 	verticesList = document.getElementById('verticesList');
@@ -7,15 +7,16 @@
 	if (imageCanvas.getContext && polygonCanvas.getContext) {
 		var imageContext = imageCanvas.getContext('2d'),
 		polygonContext = polygonCanvas.getContext('2d'),
-		maxVertices = 50, // https://github.com/dreasgrech/jsTextureToVertices/issues/2
+		maxVertices = 50,
+		// https://github.com/dreasgrech/jsTextureToVertices/issues/2
 		xyShower = document.getElementById('mouse');
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
 			var mouseInput = mouse(document.body),
 			draggingVertex,
-			draggingWidget, draggingWidgetMouseOffset;
+			draggingWidget,
+			draggingWidgetMouseOffset;
 
 			mouseInput.click(function(position) {
-					//verticesWidget.moveFromCentroid(vector2(position.x, position.y)); //used only for debug
 				var markerAtClickPosition = library.getMarkerAt(position);
 				if (markerAtClickPosition) {
 					library.setSelectedMarker(markerAtClickPosition);
@@ -55,27 +56,25 @@
 
 			mouseInput.drag(function(pos) {
 				var widgetNewPosition;
-				if (draggingVertex) {
+				if (draggingVertex) { // currently dragging a vertex
 					library.moveMarker(draggingVertex, pos);
 				}
 				displayVertices(library.getVertices());
 
-				if (draggingWidget) {
+				if (draggingWidget) { // currently dragging a widget
 					verticesWidget.moveFromTopLeft(vector2(pos.x - draggingWidgetMouseOffset.x, pos.y - draggingWidgetMouseOffset.y));
 				}
 			});
 
-			polygonCanvas.addEventListener("dragover", function(e) {
-				e.preventDefault();
-			},
-			true);
+			fileDragDrop(polygonCanvas, function(files) {
+				var image = files[0];
+				if (!image.type.match(/image.*/)) { // something that's not an image
+					alert('Wtf is that?');
+					return;
+				}
+				library.loadNewImage(image);
 
-			polygonCanvas.addEventListener("drop", function(e) {
-				e.preventDefault();
-				var im = e.dataTransfer.files[0];
-				loadNewImage(im);
-			},
-			true);
+			});
 
 			var loadNewImage = function(clientImage) {
 				if (!clientImage.type.match(/image.*/)) { // something that's not an image
@@ -94,8 +93,10 @@
 			var displayVertices = function(vertices) {
 				var output = [],
 				i,
-				vertex;
-				var list = verticesWidget.getContentContainer();
+				vertex,
+				xyShow,
+				list = verticesWidget.getContentContainer();
+
 				list.innerHTML = "";
 				for (i = 0; i < vertices.length; ++i) {
 					vertex = vertices[i].position();
@@ -108,6 +109,13 @@
 
 					list.appendChild(container);
 				}
+				xyShow = document.createElement("div");
+				var pos = mouseInput.position();
+				xyShow.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
+				list.appendChild(xyShow);
+			},
+			updateMouseCoordinatesDisplay = function(position) {
+
 			};
 
 			setInterval(library.update, 50);
