@@ -17,3 +17,11 @@
 	text-align:center;
 	cursor : move;
 }
+
+.dashboard {
+	background-color: #F5B800;
+}
+
+.dashboardItem {
+	float: left;
+}

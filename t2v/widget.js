@@ -35,6 +35,10 @@ var widget = function(initialPosition, width, headerText, headerClassName) {
 		getWidth: function() {
 			return width;
 		},
+		setWidth: function(w) {
+			width = w;
+			container.style.width = width + 'px';
+		},
 		getheaderHeight: function() {
 			return headerHeight;
 		}
