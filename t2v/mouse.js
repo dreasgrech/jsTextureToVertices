@@ -4,9 +4,15 @@ var mouse = function(el) {
 		y: 0
 	},
 	moveAction,
+
 	dragAction,
 	dragStartAction,
 	dragCompleteAction,
+
+	wheelChangeAction,
+	wheelUpAction,
+	wheelDownAction,
+
 	clickAction,
 	isLeftClicked = false,
 	isDragging = false;
@@ -21,8 +27,7 @@ var mouse = function(el) {
 	el.addEventListener("mousemove", function(e) {
 		var newPosition = getPosition(e);
 		position = newPosition;
-		if (isLeftClicked && dragAction) { 
-			(!isDragging && dragStartAction) && dragStartAction(position);
+		if (isLeftClicked && dragAction) { (!isDragging && dragStartAction) && dragStartAction(position);
 			isDragging = true;
 			dragAction(position);
 		}
@@ -49,6 +54,36 @@ var mouse = function(el) {
 	},
 	false);
 
+	el.addEventListener("DOMMouseScroll", function(e) {
+		// Code from: http://adomas.org/javascript-mouse-wheel/
+		var delta = 0;
+		if (e.wheelDelta) {
+			delta = e.wheelDelta / 120;
+			if (window.opera) {
+				delta = - delta;
+			}
+		} else if (e.detail) {
+			delta = - e.detail / 3;
+		}
+
+		if (wheelUpAction && delta > 0) {
+			wheelUpAction();
+		}
+
+		if (wheelDownAction && delta < 0) {
+			wheelDownAction();
+		}
+
+		wheelChangeAction && wheelChangeAction();
+
+		if (e.preventDefault) {
+			e.preventDefault();
+		}
+
+		e.returnValue = false;
+	},
+	false);
+
 	return {
 		position: function() {
 			return position;
@@ -70,6 +105,15 @@ var mouse = function(el) {
 		},
 		dragStart: function(action) {
 			dragStartAction = action;
+		},
+		wheelChange: function(action) {
+			wheelChangeAction = action;
+		},
+		wheelUp: function(action) {
+			wheelUpAction = action;
+		},
+		wheelDown: function(action) {
+			wheelDownAction = action;
 		}
 	};
 };
