@@ -12,7 +12,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	clearMarkers = function(markers) {
 		markers.length = 0;
 	},
+	currentImage,
 	drawLoadedImage = function(im) {
+		currentImage = im;
 		width = im.width * scale;
 		height = im.height * scale;
 
@@ -62,9 +64,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			color = color || defaultFillColor;
 			polygonContext.fillStyle = color;
 			polygonContext.beginPath();
-			polygonContext.moveTo(markers[0].position().x, markers[0].position().y);
+			polygonContext.moveTo(markers[0].scaledPosition().x, markers[0].scaledPosition().y);
 			iterateMarkers(function(marker) {
-				polygonContext.lineTo(marker.position().x, marker.position().y);
+				polygonContext.lineTo(marker.scaledPosition().x, marker.scaledPosition().y);
 			});
 			polygonContext.closePath();
 			polygonContext.fill();
@@ -129,7 +131,16 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			},
 			scale: function(newScale) {
 				if (typeof newScale !== "undefined") {
+					if (newScale === scale) {
+						return;
+					}
+
+					iterateMarkers(function (marker) {
+							marker.scale(newScale);
+					});
 					scale = newScale;
+					update();
+					drawLoadedImage(currentImage);
 					return;
 				}
 				return scale;
@@ -138,7 +149,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			addMarker: addMarker,
 			addMarkerBetween: function(marker1, marker2, position) {
 				var marker1Index = getMarkerIndex(marker1), marker2Index = getMarkerIndex(marker2);
-				addMarker(position, '', Math.min(marker1Index, marker2Index) + 1);
+				addMarker(vector2.divide(position, scale), '', Math.min(marker1Index, marker2Index) + 1);
 			},
 			getVertices: getVertices,
 			getMarkerAt: function(position) {
@@ -183,9 +194,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				reader.readAsDataURL(clientImage);
 			},
 			isPointOnEdge: function(point) {
-				point = vector2(point);
+				point = vector2(point, scale);
 				return iterateEdges(function(vertex1, vertex2) {
-					if (point.isOnLine([vertex1.position(), vertex2.position()])) {
+					if (point.isOnLine([vertex1.scaledPosition(), vertex2.scaledPosition()])) {
 						return [vertex1, vertex2];
 					}
 				});

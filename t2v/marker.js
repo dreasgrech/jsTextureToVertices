@@ -5,8 +5,8 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 	isSelected = false,
 	boundingBox = function() {
 		var topLeft = {
-			x: pos.x - (width * _scale),
-			y: pos.y - (height * _scale)
+			x: vector2.multiply(pos, _scale).x - (width * _scale),
+			y: vector2.multiply(pos, _scale).y - (height * _scale)
 		};
 		return rectangle(topLeft.x, topLeft.y, width * 2 * _scale, height * 2 * _scale);
 	},
@@ -16,7 +16,7 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
 	},
 	drawSelectedHighlighter = function(color) {
-		drawCircle(pos, (width * _scale) + 2, color || defaultSelectedColor);
+		drawCircle(vector2.multiply(pos, _scale), (width * _scale) + 2, color || defaultSelectedColor);
 	},
 	drawCircle = function(position, radius, color) {
 		context.fillStyle = color;
@@ -24,27 +24,32 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		context.arc(position.x, position.y, radius, 0, Math.PI * 2, true);
 		context.closePath();
 		context.fill();
+	},
+	draw = function(color) {
+		if (isSelected) {
+			drawSelectedHighlighter();
+		}
+
+		drawCircle(vector2.multiply(pos, _scale), width * _scale, color || defaultColor);
 	};
 
 	return {
 		position: function() {
 			return pos;
 		},
+		scaledPosition: function() {
+			return vector2.multiply(pos, _scale);
+		},
+		draw: draw,
 		scale: function(newScale) {
 			if (typeof newScale !== "undefined") {
 				_scale = newScale;
+				draw();
 				return;
 			}
 			return _scale;
 		},
 		boundingBox: boundingBox,
-		draw: function(color) {
-			if (isSelected) {
-				drawSelectedHighlighter();
-			}
-
-			drawCircle(pos, width * _scale, color || defaultColor);
-		},
 		moveTo: function(newPosition) {
 			pos = newPosition;
 		},

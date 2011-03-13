@@ -9,13 +9,15 @@
 		polygonContext = polygonCanvas.getContext('2d'),
 		// TODO: https://github.com/dreasgrech/jsTextureToVertices/issues/2
 		maxVertices = 50,
+		scaleStep = 0.5,
 		xRawFormat = 'x',
 		yRawFormat = 'y',
 		defaultRawFormat = '(' + xRawFormat + ', ' + yRawFormat + ')';
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, vector2(100, 100), initialImageFilename, maxVertices, function(library) {
 			//library.scale(2);
 			var canvasMouseInput = mouse(polygonCanvas),
-			bodyMouseInput = mouse(document.body),
+			//bodyMouseInput = mouse(document.body),
+			bodyMouseInput = mouse(document),
 			draggingVertex,
 			draggingWidget,
 			draggingWidgetMouseOffset,
@@ -64,7 +66,8 @@
 
 				content.innerHTML = "";
 				for (i = 0; i < vertices.length; ++i) {
-					vertex = vector2.divide(vertices[i].position(), library.scale()); // Scale
+					vertex = vertices[i].position();
+
 					var container = document.createElement("div");
 					container.className = 'marker';
 					if (vertices[i].isSelected()) {
@@ -84,12 +87,13 @@
 				}
 
 				var edge = library.isPointOnEdge(position);
+				//console.log(edge);
 				if (edge) {
 					library.addMarkerBetween(edge[0], edge[1], position);
 					return;
 				}
 
-				library.addMarker(position);
+				library.addMarker(vector2.divide(position, library.scale()));
 				displayVerticesSection.update();
 			});
 
@@ -117,12 +121,32 @@
 				var widgetNewPosition;
 
 				if (draggingWidget) { // currently dragging a widget
-					verticesWidget.moveFromTopLeft(vector2(pos.x - draggingWidgetMouseOffset.x, pos.y - draggingWidgetMouseOffset.y));
+					widgetNewPosition = vector2(pos.x - draggingWidgetMouseOffset.x, pos.y - draggingWidgetMouseOffset.y);
+					verticesWidget.moveFromTopLeft(widgetNewPosition);
 				}
 			});
 
 			bodyMouseInput.dragComplete(function(pos) {
 				draggingWidget = null;
+			});
+
+			bodyMouseInput.wheelUp(function(delta) {
+				library.scale(library.scale() + scaleStep);
+				scaleSection.update();
+			});
+
+			bodyMouseInput.wheelDown(function(delta) {
+				var scale = library.scale();
+
+				// clamp the scale to the scaleStep
+				if (scale - scaleStep <= 0) {
+					scale = scaleStep;
+				} else {
+					scale -= scaleStep;
+				}
+
+				library.scale(scale);
+				scaleSection.update();
 			});
 
 			canvasMouseInput.dragStart(function(pos) {
@@ -134,6 +158,7 @@
 
 			canvasMouseInput.drag(function(pos) {
 				if (draggingVertex) { // currently dragging a vertex
+					pos = vector2.divide(pos, library.scale());
 					draggingVertex.moveTo(pos);
 				}
 
@@ -176,7 +201,7 @@
 			} ());
 
 			var scaleSection = db.addSection(100, function(content) {
-					content.innerHTML = "Scale: " + library.scale();
+				content.innerHTML = "Scale: " + library.scale();
 			});
 
 			var xySection = db.addSection(100, function(content) {

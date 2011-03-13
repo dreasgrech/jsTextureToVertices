@@ -56,6 +56,10 @@ var mouse = function(el) {
 
 	el.addEventListener("DOMMouseScroll", function(e) {
 		// Code from: http://adomas.org/javascript-mouse-wheel/
+		if (!wheelChangeAction && ! wheelUpAction && ! wheelDownAction) {
+			return;
+		}
+
 		var delta = 0;
 		if (e.wheelDelta) {
 			delta = e.wheelDelta / 120;
@@ -117,4 +121,3 @@ var mouse = function(el) {
 		}
 	};
 };
-
