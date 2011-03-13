@@ -1,10 +1,10 @@
-var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, image, maxVertices, callback) {
-	var markerWidth = 3,
-	markerHeight = markerWidth,
+var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, position, image, maxVertices, callback) {
+	var markerRadius = 2,
+	markerHeight = markerRadius,
 	defaultMarkerColor = '#FF0000',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
-	scale = 1, // TODO: Scale is currently non functional: https://github.com/dreasgrech/jsTextureToVertices/issues#issue/3
+	scale = 1, 
 	library, width, height, markers = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
@@ -50,7 +50,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			}
 
 			color = color || defaultMarkerColor;
-			var newMarker = marker(polygonContext, position, markerWidth, markerHeight, color);
+			var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
 			markers.splice(collectionIndex, 0, newMarker);
 			update();
 		},
@@ -115,12 +115,24 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			});
 		};
 
+		imageCanvas.style.left = position.x + 'px';
+		imageCanvas.style.top = position.y + 'px';
+		polygonCanvas.style.left = position.x + 'px';
+		polygonCanvas.style.top = position.y + 'px';
+
 		return {
 			getWidth: function() {
 				return width;
 			},
 			getHeight: function() {
 				return height;
+			},
+			scale: function(newScale) {
+				if (typeof newScale !== "undefined") {
+					scale = newScale;
+					return;
+				}
+				return scale;
 			},
 			drawImage: drawImage,
 			addMarker: addMarker,

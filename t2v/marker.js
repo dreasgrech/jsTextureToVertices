@@ -1,13 +1,14 @@
-var marker = function(context, position, width, height, defaultColor) {
+var marker = function(context, position, width, height, scale, defaultColor) {
 	var pos = position,
+	_scale = scale,
 	defaultSelectedColor = '#70E000',
 	isSelected = false,
 	boundingBox = function() {
 		var topLeft = {
-			x: pos.x - width,
-			y: pos.y - height
+			x: pos.x - (width * _scale),
+			y: pos.y - (height * _scale)
 		};
-		return rectangle(topLeft.x, topLeft.y, width * 2, height * 2);
+		return rectangle(topLeft.x, topLeft.y, width * 2 * _scale, height * 2 * _scale);
 	},
 	showBoundingBox = function() {
 		// This function is for debugging purposes
@@ -15,7 +16,7 @@ var marker = function(context, position, width, height, defaultColor) {
 		context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
 	},
 	drawSelectedHighlighter = function(color) {
-		drawCircle(pos, width + 2, color || defaultSelectedColor);
+		drawCircle(pos, (width * _scale) + 2, color || defaultSelectedColor);
 	},
 	drawCircle = function(position, radius, color) {
 		context.fillStyle = color;
@@ -29,13 +30,20 @@ var marker = function(context, position, width, height, defaultColor) {
 		position: function() {
 			return pos;
 		},
+		scale: function(newScale) {
+			if (typeof newScale !== "undefined") {
+				_scale = newScale;
+				return;
+			}
+			return _scale;
+		},
 		boundingBox: boundingBox,
 		draw: function(color) {
 			if (isSelected) {
 				drawSelectedHighlighter();
 			}
 
-			drawCircle(pos, width, color || defaultColor);
+			drawCircle(pos, width * _scale, color || defaultColor);
 		},
 		moveTo: function(newPosition) {
 			pos = newPosition;
@@ -44,12 +52,13 @@ var marker = function(context, position, width, height, defaultColor) {
 			return boundingBox().contains(point);
 		},
 		select: function() {
-		     isSelected = true;
+			isSelected = true;
 
 		},
 		unselect: function() {
-		     isSelected = false;
-		}, isSelected : function () {
+			isSelected = false;
+		},
+		isSelected: function() {
 			return isSelected;
 		}
 	};

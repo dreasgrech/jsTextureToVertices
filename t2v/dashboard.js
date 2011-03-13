@@ -4,16 +4,33 @@
 
 var dashboard = (function() {
 	var dashboardItem = function(width, render, cssFloat) {
-		var item = document.createElement('div');
-		item.style.width = width + 'px';
+		var item = document.createElement('div'),
+		updateWidth = function(newWidth) {
+			item.style.width = newWidth + 'px';
+			itemWidth = newWidth;
+		},
+		itemWidth = width;
+
 		if (cssFloat) {
 			item.style.cssFloat = cssFloat;
 		}
 
+		updateWidth(itemWidth);
+
 		return {
 			element: item,
+			setRender: function(newRender) {
+				render = newRender;
+			},
 			update: function() {
 				render(item);
+			},
+			width: function(newWidth) {
+				if (typeof newWidth !== "undefined") {
+					updateWidth(newWidth);
+					return;
+				}
+				return itemWidth;
 			}
 		};
 	};
@@ -32,21 +49,23 @@ var dashboard = (function() {
 
 		content.className = cssClass;
 
-
 		var clearDiv = document.createElement('div');
 		clearDiv.style.clear = "both";
 		addElementToDashboard(clearDiv);
 
-		var topSection = dashboardItem(100, function () {});
+		var topSection = dashboardItem(100, function() {});
 		addElementToDashboard(topSection.element);
+		//topSection.element.style.padding = 5 + "px";
 
 		return {
 			getWidget: function() {
 				return widg;
 			},
 			addTopSection: function(width, render) {
-					       // TODO: continue working here after burger
-					       topSection.style.width = width + "px";
+				widg.setWidth(Math.max(widg.getWidth(), width));
+				topSection.width(width);
+				topSection.setRender(render);
+				topSection.update();
 			},
 			addSection: function(width, render) {
 				if (typeof render !== "function") {
@@ -72,3 +91,4 @@ var dashboard = (function() {
 		};
 	}
 } ());
+

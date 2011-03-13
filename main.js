@@ -9,19 +9,25 @@
 		polygonContext = polygonCanvas.getContext('2d'),
 		// TODO: https://github.com/dreasgrech/jsTextureToVertices/issues/2
 		maxVertices = 50,
-		defaultRawFormat = "(x, y)";
-		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, initialImageFilename, maxVertices, function(library) {
+		xRawFormat = 'x',
+		yRawFormat = 'y',
+		defaultRawFormat = '(' + xRawFormat + ', ' + yRawFormat + ')';
+		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, vector2(100, 100), initialImageFilename, maxVertices, function(library) {
+			//library.scale(2);
 			var canvasMouseInput = mouse(polygonCanvas),
 			bodyMouseInput = mouse(document.body),
 			draggingVertex,
 			draggingWidget,
 			draggingWidgetMouseOffset,
+			dbIntro = "If your browser supports the <a href='http://www.w3.org/TR/FileAPI/' target='blank'>File API</a>, you can drag an image to the existing one to change it.",
 			getVerticesPositionsHTML = function(vertices, format) {
 				var i = 0,
 				j = vertices.length,
-				output = [];
+				output = [],
+				pos;
 				for (; i < j; ++i) {
-					output.push(format.replace("x", vertices[i].position().x).replace("y", vertices[i].position().y));
+					pos = vector2.divide(vertices[i].position(), library.scale());
+					output.push(format.replace(xRawFormat, pos.x).replace(yRawFormat, pos.y));
 				}
 				return output.join("<br/>");
 			},
@@ -54,12 +60,11 @@
 				var output = [],
 				i,
 				vertex,
-				xyShow,
 				vertices = library.getVertices();
 
 				content.innerHTML = "";
 				for (i = 0; i < vertices.length; ++i) {
-					vertex = vertices[i].position();
+					vertex = vector2.divide(vertices[i].position(), library.scale()); // Scale
 					var container = document.createElement("div");
 					container.className = 'marker';
 					if (vertices[i].isSelected()) {
@@ -69,15 +74,7 @@
 					container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
 					content.appendChild(container);
 				}
-
-				xyShow = document.createElement("div");
-				var pos = canvasMouseInput.position();
-				xyShow.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
-				content.appendChild(xyShow);
-			}),
-			updateMouseCoordinatesDisplay = function(position) {
-
-			};
+			});
 
 			canvasMouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
@@ -97,6 +94,7 @@
 			});
 
 			canvasMouseInput.move(function(pos) {
+				xySection.update();
 				if (library.getMarkerAt(pos)) { // mouse cursor is currently hovering on top of a marker
 					polygonCanvas.style.cursor = 'pointer';
 				} else {
@@ -105,7 +103,6 @@
 
 			});
 
-			// TODO: Handle the different mouse handlers
 			bodyMouseInput.dragStart(function(pos) {
 				var isCursorOnVerticesWidget;
 				isCursorOnVerticesWidgetHeader = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()).contains(pos); // TODO: this line probably needs some refactoring
@@ -178,6 +175,20 @@
 				});
 			} ());
 
+			var scaleSection = db.addSection(100, function(content) {
+					content.innerHTML = "Scale: " + library.scale();
+			});
+
+			var xySection = db.addSection(100, function(content) {
+				var pos = vector2(canvasMouseInput.position());
+				pos = vector2.divide(pos, library.scale()); // Adjust the position from the mouse according to scale
+				content.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
+			});
+
+			db.addTopSection(250, function(content) {
+				content.innerHTML = dbIntro;
+			});
+
 			setInterval(library.update, 50);
 			setInterval(function() {
 				displayVerticesSection.update();
@@ -186,3 +197,4 @@
 		});
 	}
 } ());
+
