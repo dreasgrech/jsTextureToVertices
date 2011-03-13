@@ -3,10 +3,12 @@
  */
 
 var dashboard = (function() {
-	var dashboardItem = function(width, render) {
+	var dashboardItem = function(width, render, cssFloat) {
 		var item = document.createElement('div');
-		item.style.cssFloat = 'left';
 		item.style.width = width + 'px';
+		if (cssFloat) {
+			item.style.cssFloat = cssFloat;
+		}
 
 		return {
 			element: item,
@@ -18,27 +20,33 @@ var dashboard = (function() {
 
 	return function(initialPosition, headerText, cssClass, headerClassName) {
 		var sections = [],
-		widg = widget(initialPosition, 0, headerText, headerClassName);
-		var content = widg.getContentContainer(),
+		widg = widget(initialPosition, 0, headerText, headerClassName),
+		content = widg.getContentContainer(),
 		addElementToDashboard = function(item) {
 			if (content.lastChild) {
 				content.insertBefore(item, content.lastChild);
 				return;
 			};
-				content.appendChild(item);
-
+			content.appendChild(item);
 		};
+
 		content.className = cssClass;
+
 
 		var clearDiv = document.createElement('div');
 		clearDiv.style.clear = "both";
-		sections.push(clearDiv);
 		addElementToDashboard(clearDiv);
+
+		var topSection = dashboardItem(100, function () {});
+		addElementToDashboard(topSection.element);
 
 		return {
 			getWidget: function() {
 				return widg;
-
+			},
+			addTopSection: function(width, render) {
+					       // TODO: continue working here after burger
+					       topSection.style.width = width + "px";
 			},
 			addSection: function(width, render) {
 				if (typeof render !== "function") {
@@ -46,9 +54,8 @@ var dashboard = (function() {
 				}
 
 				widg.setWidth(widg.getWidth() + width);
-				var item = dashboardItem(width, render);
-				//sections.push(item);
-				//sections.splice(sections.length - 1, 0, item);
+				var item = dashboardItem(width, render, 'left');
+				sections.push(item);
 				addElementToDashboard(item.element);
 				item.update();
 
@@ -57,6 +64,7 @@ var dashboard = (function() {
 			update: function() {
 				var i = 0,
 				j = sections.length;
+
 				for (; i < j; ++i) {
 					sections[i].update();
 				}
@@ -64,4 +72,3 @@ var dashboard = (function() {
 		};
 	}
 } ());
-

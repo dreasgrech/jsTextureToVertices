@@ -1,5 +1,5 @@
 (function() {
-	var imageFilename = "images/block.png";
+	var initialImageFilename = "images/block.png";
 	var imageCanvas = document.getElementById('imageCanvas'),
 	polygonCanvas = document.getElementById('polygonCanvas'),
 	verticesList = document.getElementById('verticesList');
@@ -7,26 +7,33 @@
 	if (imageCanvas.getContext && polygonCanvas.getContext) {
 		var imageContext = imageCanvas.getContext('2d'),
 		polygonContext = polygonCanvas.getContext('2d'),
-		maxVertices = 50, // https://github.com/dreasgrech/jsTextureToVertices/issues/2
-		xyShower = document.getElementById('mouse');
-		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, imageFilename, maxVertices, function(library) {
-			var mouseInput = mouse(document.body),
+		// TODO: https://github.com/dreasgrech/jsTextureToVertices/issues/2
+		maxVertices = 50,
+		defaultRawFormat = "(x, y)";
+		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, initialImageFilename, maxVertices, function(library) {
+			var canvasMouseInput = mouse(polygonCanvas),
+			bodyMouseInput = mouse(document.body),
 			draggingVertex,
 			draggingWidget,
-			draggingWidgetMouseOffset
-			getVerticesPositionsHTML = function(vertices) {
+			draggingWidgetMouseOffset,
+			getVerticesPositionsHTML = function(vertices, format) {
 				var i = 0,
 				j = vertices.length,
 				output = [];
 				for (; i < j; ++i) {
-					output.push("(" + vertices[i].position().x + ", " + vertices[i].position().y + ")");
+					output.push(format.replace("x", vertices[i].position().x).replace("y", vertices[i].position().y));
 				}
 				return output.join("<br/>");
 			},
-			openVerticesWindow = function(vertices) {
-				var html = getVerticesPositionsHTML(vertices),
+			openVerticesWindow = function(vertices, format) {
+				if (vertices.length === 0) {
+					return;
+				}
+
+				format = format || defaultRawFormat;
+				var html = getVerticesPositionsHTML(vertices, format),
 				win = window.open("", "newwin", "height=250, width=250,toolbar=no,menubar=no");
-				win.location = 'about:blank'; // clears the window's content
+				win.location = 'about:blank'; // clears the window's HTML
 				win.document.write(html);
 			},
 			loadNewImage = function(clientImage) {
@@ -42,7 +49,8 @@
 			},
 			'Dashboard', 'dashboard', 'verticesHeader'),
 			verticesWidget = db.getWidget(),
-			displayVerticesSection = db.addSection(100, function(content) {
+			displayVerticesSectionWidth = 100,
+			displayVerticesSection = db.addSection(displayVerticesSectionWidth, function(content) {
 				var output = [],
 				i,
 				vertex,
@@ -57,13 +65,13 @@
 					if (vertices[i].isSelected()) {
 						container.className += ' markerSelect';
 					}
-					container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
 
+					container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
 					content.appendChild(container);
 				}
 
 				xyShow = document.createElement("div");
-				var pos = mouseInput.position();
+				var pos = canvasMouseInput.position();
 				xyShow.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
 				content.appendChild(xyShow);
 			}),
@@ -71,7 +79,7 @@
 
 			};
 
-			mouseInput.click(function(position) {
+			canvasMouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
 				if (markerAtClickPosition) { // A marker was clicked, so select it
 					library.setSelectedMarker(markerAtClickPosition);
@@ -88,8 +96,7 @@
 				displayVerticesSection.update();
 			});
 
-			mouseInput.move(function(pos) {
-				xyShower.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
+			canvasMouseInput.move(function(pos) {
 				if (library.getMarkerAt(pos)) { // mouse cursor is currently hovering on top of a marker
 					polygonCanvas.style.cursor = 'pointer';
 				} else {
@@ -98,60 +105,78 @@
 
 			});
 
-			mouseInput.dragStart(function(pos) {
-				var marker = library.getMarkerAt(pos),
-				isCursorOnVerticesWidget;
-				if (marker) {
-					draggingVertex = marker;
-				}
-
+			// TODO: Handle the different mouse handlers
+			bodyMouseInput.dragStart(function(pos) {
+				var isCursorOnVerticesWidget;
 				isCursorOnVerticesWidgetHeader = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()).contains(pos); // TODO: this line probably needs some refactoring
 				if (isCursorOnVerticesWidgetHeader) {
 					draggingWidget = verticesWidget;
 					draggingWidgetMouseOffset = vector2(pos.x - verticesWidget.position().x, pos.y - verticesWidget.position().y);
 				}
+
 			});
 
-			mouseInput.dragComplete(function(pos) {
-				draggingVertex = draggingWidget = null;
-			});
-
-			mouseInput.drag(function(pos) {
+			bodyMouseInput.drag(function(pos) {
 				var widgetNewPosition;
-				if (draggingVertex) { // currently dragging a vertex
-					draggingVertex.moveTo(pos);
-				}
-
-				displayVerticesSection.update();
 
 				if (draggingWidget) { // currently dragging a widget
 					verticesWidget.moveFromTopLeft(vector2(pos.x - draggingWidgetMouseOffset.x, pos.y - draggingWidgetMouseOffset.y));
 				}
 			});
 
-			fileDragDrop(polygonCanvas, function(files) {
+			bodyMouseInput.dragComplete(function(pos) {
+				draggingWidget = null;
+			});
+
+			canvasMouseInput.dragStart(function(pos) {
+				var marker = library.getMarkerAt(pos);
+				if (marker) {
+					draggingVertex = marker;
+				}
+			});
+
+			canvasMouseInput.drag(function(pos) {
+				if (draggingVertex) { // currently dragging a vertex
+					draggingVertex.moveTo(pos);
+				}
+
+				displayVerticesSection.update();
+			});
+
+			canvasMouseInput.dragComplete(function(pos) {
+				draggingVertex = null;
+			});
+
+			fileDragDrop(polygonCanvas, function(files) { // Handles the dragging and dropping of files to the cancas
 				var image = files[0];
 				if (!image.type.match(/image.*/)) { // something that's not an image
 					alert('Wtf is that?');
 					return;
 				}
 				library.loadNewImage(image);
-
 			});
 
-			(function () {
-			 var link = document.createElement('a');
-			 link.href = "#";
-			 link.innerHTML = "Raw format";
-			 link.onclick = function () {
-				openVerticesWindow(library.getMarkers());
-			 };
+			(function() { // The Raw Format Dashboard Section
+				var link = document.createElement('a'),
+				formatBox = document.createElement('input');
 
-			db.addSection(100, function(content) {
-				content.innerHTML = "";
-				content.appendChild(link);
-			});
-			}());
+				link.href = "#";
+				link.innerHTML = "Raw format";
+				link.onclick = function() {
+					var format = formatBox.value;
+					openVerticesWindow(library.getMarkers(), format);
+				};
+
+				formatBox.id = 'formatBox';
+				formatBox.type = 'text';
+				formatBox.value = defaultRawFormat;
+
+				db.addSection(100, function(content) {
+					content.innerHTML = "";
+					content.appendChild(formatBox);
+					content.appendChild(link);
+				});
+			} ());
 
 			setInterval(library.update, 50);
 			setInterval(function() {
@@ -161,4 +186,3 @@
 		});
 	}
 } ());
-

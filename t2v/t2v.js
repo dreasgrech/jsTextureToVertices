@@ -4,7 +4,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 	defaultMarkerColor = '#FF0000',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
-	scale = 1,
+	scale = 1, // TODO: Scale is currently non functional: https://github.com/dreasgrech/jsTextureToVertices/issues#issue/3
 	library, width, height, markers = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
@@ -29,7 +29,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 		width, height);
 	},
 	drawMainImage = function(callback) {
-		var im = document.createElement("img"); // like calling new Image();
+		var im = document.createElement("img"); 
 		im.onload = function() {
 			drawLoadedImage(im);
 			callback(library);
@@ -41,7 +41,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			imageContext.drawImage(image, position.x, position.y, width, height);
 		},
 		addMarker = function(position, color, collectionIndex) {
-			if (typeof collectionIndex === "undefined") {
+			if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
 				collectionIndex = markers.length;
 			}
 
@@ -58,8 +58,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 			if (markers.length == 0) {
 				return;
 			}
+
 			color = color || defaultFillColor;
-			var i;
 			polygonContext.fillStyle = color;
 			polygonContext.beginPath();
 			polygonContext.moveTo(markers[0].position().x, markers[0].position().y);
@@ -171,7 +171,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, ima
 				reader.readAsDataURL(clientImage);
 			},
 			isPointOnEdge: function(point) {
-				var isIt = false;
 				point = vector2(point);
 				return iterateEdges(function(vertex1, vertex2) {
 					if (point.isOnLine([vertex1.position(), vertex2.position()])) {

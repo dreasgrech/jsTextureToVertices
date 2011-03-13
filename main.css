@@ -25,3 +25,7 @@
 .dashboardItem {
 	float: left;
 }
+
+#formatBox {
+	width:100px;
+}
