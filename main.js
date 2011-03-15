@@ -14,7 +14,6 @@
 		yRawFormat = 'y',
 		defaultRawFormat = '(' + xRawFormat + ', ' + yRawFormat + ')';
 		t2v(imageCanvas, imageContext, polygonCanvas, polygonContext, vector2(100, 100), initialImageFilename, maxVertices, function(library) {
-			//library.scale(2);
 			var canvasMouseInput = mouse(polygonCanvas),
 			//bodyMouseInput = mouse(document.body),
 			bodyMouseInput = mouse(document),
@@ -87,7 +86,6 @@
 				}
 
 				var edge = library.isPointOnEdge(position);
-				//console.log(edge);
 				if (edge) {
 					library.addMarkerBetween(edge[0], edge[1], position);
 					return;
@@ -210,9 +208,15 @@
 				content.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
 			});
 
-			db.addTopSection(250, function(content) {
-				content.innerHTML = dbIntro;
-			});
+			(function(introContainerID) {
+				var introContainer = document.getElementById(introContainerID),
+				introText = introContainer.innerHTML;
+
+				document.body.removeChild(introContainer);
+				db.addTopSection(250, function(content) {
+					content.innerHTML = introText;
+				});
+			} ('introduction'));
 
 			setInterval(library.update, 50);
 			setInterval(function() {

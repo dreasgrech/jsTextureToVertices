@@ -8,8 +8,9 @@ var dashboard = (function() {
 		updateWidth = function(newWidth) {
 			item.style.width = newWidth + 'px';
 			itemWidth = newWidth;
-		},
-		itemWidth = width;
+		};
+
+			itemWidth = width;
 
 		if (cssFloat) {
 			item.style.cssFloat = cssFloat;
@@ -63,7 +64,6 @@ var dashboard = (function() {
 			},
 			addTopSection: function(width, render) {
 				widg.setWidth(Math.max(widg.getWidth(), width));
-				topSection.width(width);
 				topSection.setRender(render);
 				topSection.update();
 			},
@@ -77,6 +77,7 @@ var dashboard = (function() {
 				sections.push(item);
 				addElementToDashboard(item.element);
 				item.update();
+				topSection.width(Math.max(topSection.width(), widg.getWidth()));
 
 				return item;
 			},
