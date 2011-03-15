@@ -1,10 +1,11 @@
 var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, position, image, maxVertices, callback) {
 	var markerRadius = 2,
 	markerHeight = markerRadius,
-	defaultMarkerColor = '#FF0000',
+	defaultMarkerColor = 'rgba(255, 0, 0, 1)',
+	defaultGhostMarkerColor = 'rgba(255, 0, 0, 0.3)',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
-	scale = 1, 
+	scale = 1,
 	library, width, height, markers = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
@@ -31,7 +32,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		width, height);
 	},
 	drawMainImage = function(callback) {
-		var im = document.createElement("img"); 
+		var im = document.createElement("img");
 		im.onload = function() {
 			drawLoadedImage(im);
 			callback(library);
@@ -57,7 +58,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			update();
 		},
 		drawPolygonFill = function(color) {
-			if (markers.length == 0) {
+			if (markers.length === 0) {
 				return;
 			}
 
@@ -73,7 +74,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		},
 		drawMarkers = function() {
 			iterateMarkers(function(marker, i) {
-				if (i == markers.length - 1) { // last marker
+				if (i === markers.length - 1) { // last marker
 					marker.draw(defaultLastMarkerColor);
 				} else {
 					marker.draw();
@@ -87,6 +88,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			clearCanvas();
 			drawPolygonFill();
 			drawMarkers();
+			if (isShowingGhostMarker) {
+				ghostMarker.scale(scale);
+				ghostMarker.draw();
+			}
 		},
 		iterateMarkers = function(action) {
 			var i = 0,
@@ -122,6 +127,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
+		var ghostMarker = marker(polygonContext, {
+			x: 0,
+			y: 0
+		},
+		markerRadius, markerHeight, scale, defaultGhostMarkerColor),
+		isShowingGhostMarker;
+
 		return {
 			getWidth: function() {
 				return width;
@@ -135,8 +147,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 						return;
 					}
 
-					iterateMarkers(function (marker) {
-							marker.scale(newScale);
+					iterateMarkers(function(marker) {
+						marker.scale(newScale);
 					});
 					scale = newScale;
 					update();
@@ -148,8 +160,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			drawImage: drawImage,
 			addMarker: addMarker,
 			addMarkerBetween: function(marker1, marker2, position) {
-				var marker1Index = getMarkerIndex(marker1), marker2Index = getMarkerIndex(marker2);
-				addMarker(vector2.divide(position, scale), '', Math.min(marker1Index, marker2Index) + 1);
+				var marker1Index = getMarkerIndex(marker1),
+				marker2Index = getMarkerIndex(marker2);
+				addMarker(vector2.divide(position, scale), null
+				/* null to use the default color */
+				, Math.min(marker1Index, marker2Index) + 1);
 			},
 			getVertices: getVertices,
 			getMarkerAt: function(position) {
@@ -162,7 +177,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			update: update,
 			setSelectedMarker: function(marker) {
 				iterateMarkers(function(m) {
-					if (m == marker) {
+					if (m === marker) {
 						m.select();
 						return;
 					}
@@ -200,6 +215,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 						return [vertex1, vertex2];
 					}
 				});
+			},
+			showGhostMarker: function(position) {
+				isShowingGhostMarker = true;
+				ghostMarker.moveTo(position);
+			},
+			hideGhostMarker: function() {
+				isShowingGhostMarker = false;
 			}
 		};
 	};

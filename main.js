@@ -9,7 +9,7 @@
 		polygonContext = polygonCanvas.getContext('2d'),
 		// TODO: https://github.com/dreasgrech/jsTextureToVertices/issues/2
 		maxVertices = 50,
-		scaleStep = 0.5,
+		scaleStep = 0.1,
 		xRawFormat = 'x',
 		yRawFormat = 'y',
 		defaultRawFormat = '(' + xRawFormat + ', ' + yRawFormat + ')';
@@ -20,7 +20,6 @@
 			draggingVertex,
 			draggingWidget,
 			draggingWidgetMouseOffset,
-			dbIntro = "If your browser supports the <a href='http://www.w3.org/TR/FileAPI/' target='blank'>File API</a>, you can drag an image to the existing one to change it.",
 			getVerticesPositionsHTML = function(vertices, format) {
 				var i = 0,
 				j = vertices.length,
@@ -86,7 +85,7 @@
 				}
 
 				var edge = library.isPointOnEdge(position);
-				if (edge) {
+				if (edge) { // clicked on a polygon edge
 					library.addMarkerBetween(edge[0], edge[1], position);
 					return;
 				}
@@ -96,10 +95,18 @@
 			});
 
 			canvasMouseInput.move(function(pos) {
+				var edge = library.isPointOnEdge(pos);
+
 				xySection.update();
 				if (library.getMarkerAt(pos)) { // mouse cursor is currently hovering on top of a marker
 					polygonCanvas.style.cursor = 'pointer';
+						library.hideGhostMarker();
 				} else {
+					if (edge) { // mouse pointer is hovering on a polygon edge
+						library.showGhostMarker(vector2.divide(pos, library.scale()));
+					} else {
+						library.hideGhostMarker();
+					}
 					polygonCanvas.style.cursor = 'default';
 				}
 
@@ -107,8 +114,8 @@
 
 			bodyMouseInput.dragStart(function(pos) {
 				var widgetHeaderBoundingBox = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()),
-				isCursorOnVerticesWidgetHeader = widgetHeaderBoundingBox.contains(pos);
-				if (isCursorOnVerticesWidgetHeader) {
+				isCursorOnDashboardHeader = widgetHeaderBoundingBox.contains(pos);
+				if (isCursorOnDashboardHeader) {
 					draggingWidget = verticesWidget;
 					draggingWidgetMouseOffset = vector2(pos.x - verticesWidget.position().x, pos.y - verticesWidget.position().y);
 				}
@@ -167,9 +174,9 @@
 				draggingVertex = null;
 			});
 
-			fileDragDrop(polygonCanvas, function(files) { // Handles the dragging and dropping of files to the cancas
+			fileDragDrop(polygonCanvas, function(files) { // Handles the dragging and dropping of files to the canvas
 				var image = files[0];
-				if (!image.type.match(/image.*/)) { // something that's not an image
+				if (!image.type.match(/image.*/)) { // something that's not an image (should probably encapsulate this form of checking to the fileDragDrop function
 					alert('Wtf is that?');
 					return;
 				}

@@ -14,8 +14,8 @@ var mouse = function(el) {
 	wheelDownAction,
 
 	clickAction,
-	isLeftClicked = false,
-	isDragging = false;
+	isLeftClicked,
+	isDragging;
 
 	var getPosition = function(e) {
 		var x = e.clientX, y = e.clientY;
@@ -54,13 +54,13 @@ var mouse = function(el) {
 			return false;
 		}
 
-		clickAction && clickAction(getPosition(e));
+		clickAction && clickAction(getPosition(e)); // It would probably be better if this was moved to the click event rather than trigger on mouse up, because it can be confusing to the client if click fired at mouseup rather than click.
 		return false;
 	},
 	false);
 
 	el.addEventListener("DOMMouseScroll", function(e) {
-		// Code from: http://adomas.org/javascript-mouse-wheel/
+		// Details from: http://adomas.org/javascript-mouse-wheel/
 		if (!wheelChangeAction && ! wheelUpAction && ! wheelDownAction) {
 			return;
 		}
