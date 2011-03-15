@@ -106,8 +106,8 @@
 			});
 
 			bodyMouseInput.dragStart(function(pos) {
-				var isCursorOnVerticesWidget;
-				isCursorOnVerticesWidgetHeader = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()).contains(pos); // TODO: this line probably needs some refactoring
+				var widgetHeaderBoundingBox = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()),
+				isCursorOnVerticesWidgetHeader = widgetHeaderBoundingBox.contains(pos);
 				if (isCursorOnVerticesWidgetHeader) {
 					draggingWidget = verticesWidget;
 					draggingWidgetMouseOffset = vector2(pos.x - verticesWidget.position().x, pos.y - verticesWidget.position().y);

@@ -18,16 +18,21 @@ var mouse = function(el) {
 	isDragging = false;
 
 	var getPosition = function(e) {
-		return {
-			x: e.clientX - el.offsetLeft,
-			y: e.clientY - el.offsetTop
-		};
+		var x = e.clientX, y = e.clientY;
+		if (typeof el.offsetTop !== "undefined" && typeof el.offsetLeft !== "undefined") {
+			x -= el.offsetLeft;
+			y -= el.offsetTop;
+
+		}
+
+		return {x: x, y: y};
 	};
 
 	el.addEventListener("mousemove", function(e) {
 		var newPosition = getPosition(e);
 		position = newPosition;
-		if (isLeftClicked && dragAction) { (!isDragging && dragStartAction) && dragStartAction(position);
+		if (isLeftClicked && dragAction) { 
+			(!isDragging && dragStartAction) && dragStartAction(position);
 			isDragging = true;
 			dragAction(position);
 		}

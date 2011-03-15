@@ -23,6 +23,10 @@ var rectangle = function(x, y, width, height) {
 		return (obj.x < point.x && obj.y < point.y) && point.x < obj.x + width && point.y < obj.y + height;
 	};
 
+	obj.toString = function () {
+		return ["{X:", x, ", Y:", y, "} Width:", width, ", Height:", height].join(' '); 
+	};
+
 	return obj;
 };
 
