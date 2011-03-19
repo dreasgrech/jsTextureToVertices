@@ -3,40 +3,49 @@ var mouse = function(el) {
 		x: 0,
 		y: 0
 	},
-	moveAction,
+	moveAction = [],
 
-	dragAction,
-	dragStartAction,
-	dragCompleteAction,
+	dragAction = [],
+	dragStartAction = [],
+	dragCompleteAction = [],
 
-	wheelChangeAction,
-	wheelUpAction,
-	wheelDownAction,
+	wheelChangeAction = [],
+	wheelUpAction = [],
+	wheelDownAction = [],
 
-	clickAction,
+	clickAction = [],
 	isLeftClicked,
 	isDragging;
 
 	var getPosition = function(e) {
-		var x = e.clientX, y = e.clientY;
+		var x = e.clientX,
+		y = e.clientY;
 		if (typeof el.offsetTop !== "undefined" && typeof el.offsetLeft !== "undefined") {
 			x -= el.offsetLeft;
 			y -= el.offsetTop;
 
 		}
 
-		return {x: x, y: y};
+		return {
+			x: x,
+			y: y
+		};
+	}, executeCallbacks = function (/* list, args...*/) {
+		var args = [].slice.apply(arguments), list = args.shift(), i = 0, listLength = list.length;
+		for (; i < listLength; ++i) {
+			list[i].apply(this, args);
+		}
 	};
 
 	el.addEventListener("mousemove", function(e) {
 		var newPosition = getPosition(e);
 		position = newPosition;
-		if (isLeftClicked && dragAction) { 
-			(!isDragging && dragStartAction) && dragStartAction(position);
+		if (isLeftClicked && dragAction.length) { 
+			!isDragging && executeCallbacks(dragStartAction,position);
 			isDragging = true;
-			dragAction(position);
+			executeCallbacks(dragAction,position);
 		}
-		moveAction && moveAction(position);
+		moveAction.length && executeCallbacks(moveAction, position);
 	},
 	false);
 
@@ -48,20 +57,20 @@ var mouse = function(el) {
 
 	el.addEventListener("mouseup", function(e) {
 		isLeftClicked = false;
-		if (dragCompleteAction && isDragging) {
+		if (dragCompleteAction.length && isDragging) {
 			isDragging = false;
-			dragCompleteAction(getPosition(e));
+			executeCallbacks(dragCompleteAction,getPosition(e));
 			return false;
 		}
 
-		clickAction && clickAction(getPosition(e)); // It would probably be better if this was moved to the click event rather than trigger on mouse up, because it can be confusing to the client if click fired at mouseup rather than click.
+		clickAction.length && executeCallbacks(clickAction,getPosition(e)); // It would probably be better if this was moved to the click event rather than trigger on mouse up, because it can be confusing to the client if click fired at mouseup rather than click.
 		return false;
 	},
 	false);
 
 	el.addEventListener("DOMMouseScroll", function(e) {
 		// Details from: http://adomas.org/javascript-mouse-wheel/
-		if (!wheelChangeAction && ! wheelUpAction && ! wheelDownAction) {
+		if (!wheelChangeAction.length && ! wheelUpAction.length && ! wheelDownAction.length) {
 			return;
 		}
 
@@ -75,15 +84,15 @@ var mouse = function(el) {
 			delta = - e.detail / 3;
 		}
 
-		if (wheelUpAction && delta > 0) {
-			wheelUpAction();
+		if (wheelUpAction.length && delta > 0) {
+			executeCallbacks(wheelUpAction);
 		}
 
-		if (wheelDownAction && delta < 0) {
-			wheelDownAction();
+		if (wheelDownAction.length && delta < 0) {
+			executeCallbacks(wheelDownAction);
 		}
 
-		wheelChangeAction && wheelChangeAction();
+		wheelChangeAction.length && executeCallbacks(wheelChangeAction);
 
 		if (e.preventDefault) {
 			e.preventDefault();
@@ -101,28 +110,28 @@ var mouse = function(el) {
 			return isLeftClicked;
 		},
 		click: function(action) {
-			clickAction = action;
+			clickAction.push(action);
 		},
 		move: function(action) {
-			moveAction = action;
+			moveAction.push(action);
 		},
 		drag: function(action) {
-			dragAction = action;
+			dragAction.push(action);
 		},
 		dragComplete: function(action) {
-			dragCompleteAction = action;
+			dragCompleteAction.push(action);
 		},
 		dragStart: function(action) {
-			dragStartAction = action;
+			dragStartAction.push(action);
 		},
 		wheelChange: function(action) {
-			wheelChangeAction = action;
+			wheelChangeAction.push(action);
 		},
 		wheelUp: function(action) {
-			wheelUpAction = action;
+			wheelUpAction.push(action);
 		},
 		wheelDown: function(action) {
-			wheelDownAction = action;
+			wheelDownAction.push(action);
 		}
 	};
 };
