@@ -26,7 +26,7 @@
 				output = [],
 				pos;
 				for (; i < j; ++i) {
-					pos = vector2.divide(vertices[i].position(), library.scale());
+					pos = vertices[i].position();
 					output.push(format.replace(xRawFormat, pos.x).replace(yRawFormat, pos.y));
 				}
 				return output.join("<br/>");
