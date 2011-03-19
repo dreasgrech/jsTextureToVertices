@@ -1,13 +1,15 @@
+// TODO: Implement a couple of more gestures, like horizontalDrag and verticalDrag
 var mouse = function(el) {
 	var position = {
 		x: 0,
 		y: 0
 	},
+    	lastPosition = position,
 	moveAction = [],
 
-	dragAction = [],
-	dragStartAction = [],
-	dragCompleteAction = [],
+	freeDragAction = [],
+	freeDragStartAction = [],
+	freeDragCompleteAction = [],
 
 	wheelChangeAction = [],
 	wheelUpAction = [],
@@ -23,7 +25,6 @@ var mouse = function(el) {
 		if (typeof el.offsetTop !== "undefined" && typeof el.offsetLeft !== "undefined") {
 			x -= el.offsetLeft;
 			y -= el.offsetTop;
-
 		}
 
 		return {
@@ -39,13 +40,16 @@ var mouse = function(el) {
 
 	el.addEventListener("mousemove", function(e) {
 		var newPosition = getPosition(e);
-		position = newPosition;
-		if (isLeftClicked && dragAction.length) { 
-			!isDragging && executeCallbacks(dragStartAction,position);
+		if (isLeftClicked && freeDragAction.length) { 
+			!isDragging && executeCallbacks(freeDragStartAction, newPosition);
 			isDragging = true;
-			executeCallbacks(dragAction,position);
+			executeCallbacks(freeDragAction, newPosition);
 		}
-		moveAction.length && executeCallbacks(moveAction, position);
+
+		moveAction.length && executeCallbacks(moveAction, newPosition);
+
+		lastPosition = position;
+		position = newPosition;
 	},
 	false);
 
@@ -57,9 +61,9 @@ var mouse = function(el) {
 
 	el.addEventListener("mouseup", function(e) {
 		isLeftClicked = false;
-		if (dragCompleteAction.length && isDragging) {
+		if (freeDragCompleteAction.length && isDragging) {
 			isDragging = false;
-			executeCallbacks(dragCompleteAction,getPosition(e));
+			executeCallbacks(freeDragCompleteAction,getPosition(e));
 			return false;
 		}
 
@@ -69,7 +73,7 @@ var mouse = function(el) {
 	false);
 
 	el.addEventListener("DOMMouseScroll", function(e) {
-		// Details from: http://adomas.org/javascript-mouse-wheel/
+		// Delta details from: http://adomas.org/javascript-mouse-wheel/
 		if (!wheelChangeAction.length && ! wheelUpAction.length && ! wheelDownAction.length) {
 			return;
 		}
@@ -94,9 +98,7 @@ var mouse = function(el) {
 
 		wheelChangeAction.length && executeCallbacks(wheelChangeAction);
 
-		if (e.preventDefault) {
-			e.preventDefault();
-		}
+		e.preventDefault && e.preventDefault();
 
 		e.returnValue = false;
 	},
@@ -115,14 +117,14 @@ var mouse = function(el) {
 		move: function(action) {
 			moveAction.push(action);
 		},
-		drag: function(action) {
-			dragAction.push(action);
+		freeDrag: function(action) {
+			freeDragAction.push(action);
 		},
-		dragComplete: function(action) {
-			dragCompleteAction.push(action);
+		freeDragComplete: function(action) {
+			freeDragCompleteAction.push(action);
 		},
-		dragStart: function(action) {
-			dragStartAction.push(action);
+		freeDragStart: function(action) {
+			freeDragStartAction.push(action);
 		},
 		wheelChange: function(action) {
 			wheelChangeAction.push(action);

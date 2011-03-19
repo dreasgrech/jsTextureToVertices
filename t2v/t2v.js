@@ -39,6 +39,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		};
 		im.src = image;
 	},
+	ghostMarker = marker(polygonContext, { x: 0, y: 0 }, markerRadius, markerHeight, scale, defaultGhostMarkerColor), isShowingGhostMarker;
 	initializer = function() {
 		var drawImage = function(image, position, width, height) {
 			imageContext.drawImage(image, position.x, position.y, width, height);
@@ -98,7 +99,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			j = markers.length,
 			stop;
 			for (; i < j; ++i) {
-				if (stop = action(markers[i], i)) {
+				stop = action(markers[i], i)
+				if (typeof stop !== "undefined") {
 					return stop;
 				}
 			}
@@ -117,9 +119,17 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			});
 		},
 		getMarkerIndex = function(marker) {
-			return iterateMarkers(function(m, index) {
-				if (m === marker) return index;
+			var num = iterateMarkers(function(m, index) {
+				if (vector2.areEqual(m.position(), marker.position())) {
+					return index;
+				}
 			});
+
+			if (typeof num === "undefined") {
+				throw "Undefined";
+			}
+
+			return num;
 		};
 
 		imageCanvas.style.left = position.x + 'px';
@@ -127,12 +137,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
-		var ghostMarker = marker(polygonContext, {
-			x: 0,
-			y: 0
-		},
-		markerRadius, markerHeight, scale, defaultGhostMarkerColor),
-		isShowingGhostMarker;
+		
 
 		return {
 			getWidth: function() {
@@ -160,11 +165,17 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			drawImage: drawImage,
 			addMarker: addMarker,
 			addMarkerBetween: function(marker1, marker2, position) {
+				console.log("Adding marker between: ", marker1.position(), marker2.position());
 				var marker1Index = getMarkerIndex(marker1),
 				marker2Index = getMarkerIndex(marker2);
+				collectionIndex = Math.max(marker1Index, marker2Index); //(Math.min(marker1Index, marker2Index) + 1) % markers.length;
+				if (!(collectionIndex % markers.length)) {
+					collectionIndex = 0;
+				}
+
 				addMarker(vector2.divide(position, scale), null
 				/* null to use the default color */
-				, Math.min(marker1Index, marker2Index) + 1);
+				, collectionIndex);
 			},
 			getVertices: getVertices,
 			getMarkerAt: function(position) {
@@ -188,6 +199,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			getMarkers: function() {
 				return markers;
 			},
+			getMarkerCount: function() {
+				return markers.length;
+			},
 			loadNewImage: function(clientImage) {
 				if (!clientImage.toString().indexOf("File]")) {
 					throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
@@ -209,7 +223,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				reader.readAsDataURL(clientImage);
 			},
 			isPointOnEdge: function(point) {
-				point = vector2(point, scale);
+				//point = vector2(point, scale); // ???
+				point = vector2(point.x * scale, point.y * scale);
 				return iterateEdges(function(vertex1, vertex2) {
 					if (point.isOnLine([vertex1.scaledPosition(), vertex2.scaledPosition()])) {
 						return [vertex1, vertex2];
@@ -222,6 +237,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			},
 			hideGhostMarker: function() {
 				isShowingGhostMarker = false;
+			},
+			clearPolygons: function() {
+				markers.length = 0;
 			}
 		};
 	};

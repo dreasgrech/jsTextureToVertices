@@ -55,27 +55,37 @@
 			},
 			'Dashboard', 'dashboard', 'verticesHeader'),
 			verticesWidget = db.getWidget(),
-			displayVerticesSectionWidth = 100,
-			displayVerticesSection = db.addSection(displayVerticesSectionWidth, function(content) {
-				var output = [],
-				i,
-				vertex,
-				vertices = library.getVertices();
+			displayVerticesSectionWidth = 100;
 
-				content.innerHTML = "";
-				for (i = 0; i < vertices.length; ++i) {
-					vertex = vertices[i].position();
+		var displayVerticesSection = (function() {
+				 //var addVertexDisplay = function (
 
-					var container = document.createElement("div");
-					container.className = 'marker';
-					if (vertices[i].isSelected()) {
-						container.className += ' markerSelect';
+				 return db.addSection(displayVerticesSectionWidth, function(content) {
+					var output = [],
+					i,
+					vertex,
+					vertices = library.getVertices();
+
+					content.innerHTML = "";
+					for (i = 0; i < vertices.length; ++i) { (function(n) {
+							vertex = vertices[n].position();
+
+							var container = document.createElement("div");
+							container.className = 'marker';
+							if (vertices[n].isSelected()) {
+								container.className += ' markerSelect';
+							}
+
+							container.onclick = function() {
+								alert(container.innerHTML);
+							}
+
+							container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
+							content.appendChild(container);
+						} (i));
 					}
-
-					container.innerHTML = '(' + vertex.x + ', ' + vertex.y + ')';
-					content.appendChild(container);
-				}
-			});
+				});
+			} ());
 
 			canvasMouseInput.click(function(position) {
 				var markerAtClickPosition = library.getMarkerAt(position);
@@ -84,10 +94,13 @@
 					return;
 				}
 
-				var edge = library.isPointOnEdge(position);
-				if (edge) { // clicked on a polygon edge
-					library.addMarkerBetween(edge[0], edge[1], position);
-					return;
+				if (library.getMarkerCount() > 2) { //no point in trying to add a marker "between one point"
+					var edge = library.isPointOnEdge(vector2.multiply(position, library.scale()));
+					if (edge) { // clicked on a polygon edge
+						//console.log(edge[0].position(), edge[1].position());
+						library.addMarkerBetween(edge[0], edge[1], position);
+						return;
+					}
 				}
 
 				library.addMarker(vector2.divide(position, library.scale()));
@@ -95,14 +108,14 @@
 			});
 
 			canvasMouseInput.move(function(pos) {
-				var edge = library.isPointOnEdge(pos);
+				var edge;
 
 				xySection.update();
 				if (library.getMarkerAt(pos)) { // mouse cursor is currently hovering on top of a marker
 					polygonCanvas.style.cursor = 'pointer';
-						library.hideGhostMarker();
+					library.hideGhostMarker();
 				} else {
-					if (edge) { // mouse pointer is hovering on a polygon edge
+					if (library.getMarkerCount() > 1 && (edge = library.isPointOnEdge(vector2.multiply(pos, library.scale())))) { // mouse pointer is hovering on a polygon edge
 						library.showGhostMarker(vector2.divide(pos, library.scale()));
 					} else {
 						library.hideGhostMarker();
@@ -112,7 +125,7 @@
 
 			});
 
-			bodyMouseInput.dragStart(function(pos) {
+			bodyMouseInput.freeDragStart(function(pos) {
 				var widgetHeaderBoundingBox = rectangle(verticesWidget.position().x, verticesWidget.position().y, verticesWidget.getWidth(), verticesWidget.getheaderHeight()),
 				isCursorOnDashboardHeader = widgetHeaderBoundingBox.contains(pos);
 				if (isCursorOnDashboardHeader) {
@@ -122,7 +135,7 @@
 
 			});
 
-			bodyMouseInput.drag(function(pos) {
+			bodyMouseInput.freeDrag(function(pos) {
 				var widgetNewPosition;
 
 				if (draggingWidget) { // currently dragging a widget
@@ -131,7 +144,7 @@
 				}
 			});
 
-			bodyMouseInput.dragComplete(function(pos) {
+			bodyMouseInput.freeDragComplete(function(pos) {
 				draggingWidget = null;
 			});
 
@@ -144,24 +157,20 @@
 				var scale = library.scale();
 
 				// clamp the scale to the scaleStep
-				if (scale - scaleStep <= 0) {
-					scale = scaleStep;
-				} else {
-					scale -= scaleStep;
-				}
+				scale = (scale - scaleStep <= 0) ? scaleStep : scale - scaleStep;
 
 				library.scale(scale);
 				scaleSection.update();
 			});
 
-			canvasMouseInput.dragStart(function(pos) {
+			canvasMouseInput.freeDragStart(function(pos) {
 				var marker = library.getMarkerAt(pos);
 				if (marker) {
 					draggingVertex = marker;
 				}
 			});
 
-			canvasMouseInput.drag(function(pos) {
+			canvasMouseInput.freeDrag(function(pos) {
 				if (draggingVertex) { // currently dragging a vertex
 					pos = vector2.divide(pos, library.scale());
 					draggingVertex.moveTo(pos);
@@ -170,7 +179,7 @@
 				displayVerticesSection.update();
 			});
 
-			canvasMouseInput.dragComplete(function(pos) {
+			canvasMouseInput.freeDragComplete(function(pos) {
 				draggingVertex = null;
 			});
 
@@ -213,6 +222,18 @@
 				var pos = vector2(canvasMouseInput.position());
 				pos = vector2.divide(pos, library.scale()); // Adjust the position from the mouse according to scale
 				content.innerHTML = 'X: ' + pos.x + ', Y: ' + pos.y;
+			});
+
+			db.addSection(100, function(content) {
+				var clearLink = document.createElement('a');
+				clearLink.href = "#";
+				//clearLink.alt = "Remove all vertices"; // TODO: check for the tooltip
+				clearLink.innerHTML = "Clear";
+				clearLink.onclick = function() {
+					library.clearPolygons();
+				};
+				content.appendChild(clearLink);
+
 			});
 
 			(function(introContainerID) {
