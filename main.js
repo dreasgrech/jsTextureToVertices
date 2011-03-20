@@ -95,9 +95,8 @@
 				}
 
 				if (library.getMarkerCount() > 2) { //no point in trying to add a marker "between one point"
-					var edge = library.isPointOnEdge(vector2.multiply(position, library.scale()));
+					var edge = library.isPointOnEdge(position);
 					if (edge) { // clicked on a polygon edge
-						//console.log(edge[0].position(), edge[1].position());
 						library.addMarkerBetween(edge[0], edge[1], position);
 						return;
 					}
@@ -115,7 +114,7 @@
 					polygonCanvas.style.cursor = 'pointer';
 					library.hideGhostMarker();
 				} else {
-					if (library.getMarkerCount() > 1 && (edge = library.isPointOnEdge(vector2.multiply(pos, library.scale())))) { // mouse pointer is hovering on a polygon edge
+					if (library.getMarkerCount() > 1 && (edge = library.isPointOnEdge(pos))) { // mouse pointer is hovering on a polygon edge
 						library.showGhostMarker(vector2.divide(pos, library.scale()));
 					} else {
 						library.hideGhostMarker();
