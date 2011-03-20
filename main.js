@@ -233,9 +233,23 @@
 				//clearLink.alt = "Remove all vertices"; // TODO: check for the tooltip
 				clearLink.innerHTML = "Clear";
 				clearLink.onclick = function() {
-					library.clearPolygons();
+					if (library.getMarkerCount() && confirm("Are you sure you want to remove all vertices?")) {
+						library.clearPolygons();
+					}
 				};
 				content.appendChild(clearLink);
+
+			});
+
+			db.addSection(100, function (content) {
+					var drawPolygon = document.createElement('input');
+					drawPolygon.type = "checkbox";
+					drawPolygon.checked = true;
+					drawPolygon.onchange = function () {
+						library.togglePolygonDisplay();
+					};
+
+					content.appendChild(drawPolygon);
 
 			});
 
@@ -250,10 +264,7 @@
 			} ('introduction'));
 
 			setInterval(library.update, 50);
-			setInterval(function() {
-				displayVerticesSection.update();
-			},
-			100);
+			setInterval(displayVerticesSection.update, 100);
 		});
 	}
 } ());

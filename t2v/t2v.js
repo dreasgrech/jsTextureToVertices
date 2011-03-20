@@ -5,6 +5,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	defaultGhostMarkerColor = 'rgba(255, 0, 0, 0.3)',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
+	showPolygon = true, // a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
 	scale = 1,
 	library, width, height, markers = [],
 	clearCanvas = function() {
@@ -39,7 +40,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		};
 		im.src = image;
 	},
-	ghostMarker = marker(polygonContext, { x: 0, y: 0 }, markerRadius, markerHeight, scale, defaultGhostMarkerColor), isShowingGhostMarker,
+	ghostMarker = marker(polygonContext, {
+		x: 0,
+		y: 0
+	},
+	markerRadius, markerHeight, scale, defaultGhostMarkerColor),
+	isShowingGhostMarker,
 	initializer = function() {
 		var drawImage = function(image, position, width, height) {
 			imageContext.drawImage(image, position.x, position.y, width, height);
@@ -59,7 +65,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			update();
 		},
 		drawPolygonFill = function(color) {
-			if (markers.length === 0) {
+			if (!showPolygon || markers.length === 0) {
 				return;
 			}
 
@@ -126,7 +132,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			});
 
 			if (typeof num === "undefined") {
-				throw "Undefined";
+				throw "Something went wrong; a marker should always have an index";
 			}
 
 			return num;
@@ -136,8 +142,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		imageCanvas.style.top = position.y + 'px';
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
-
-		
 
 		return {
 			getWidth: function() {
@@ -167,12 +171,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			addMarkerBetween: function(marker1, marker2, position) {
 				var marker1Index = getMarkerIndex(marker1),
 				marker2Index = getMarkerIndex(marker2);
-				collectionIndex = Math.max(marker1Index, marker2Index); //(Math.min(marker1Index, marker2Index) + 1) % markers.length;
-				if (Math.max(marker1Index, marker2Index) === markers.length - 1 && !Math.min(marker1Index, marker2Index)) {
+				collectionIndex = Math.max(marker1Index, marker2Index);
+				if (Math.max(marker1Index, marker2Index) === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
 					collectionIndex++;
 				}
 
-				addMarker(vector2.divide(position, scale), null  , collectionIndex); // null to use the default color
+				addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
 			},
 			getVertices: getVertices,
 			getMarkerAt: function(position) {
@@ -236,6 +240,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			},
 			clearPolygons: function() {
 				markers.length = 0;
+			}, togglePolygonDisplay: function () {
+				showPolygon = !showPolygon; 
 			}
 		};
 	};
