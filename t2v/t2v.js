@@ -38,8 +38,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.width = width;
 		polygonCanvas.height = height;
 
-		library = initializer();
-		library.drawImage(im, vector2.zero(), width, height);
+		//library = initializer();
+		//library.drawImage(im, vector2.zero(), width, height);
+		console.log(imageContext, im, width, height, vector2.zero());
+			imageContext.drawImage(im, vector2.zero(), width, height);
+		loopStarted = true;
 	},
 	drawMainImage = function(callback) {
 		var im = document.createElement("img");
@@ -51,34 +54,101 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
 	isShowingGhostMarker,
-	verticesCookieSeperator = '#';
+	verticesCookieSeperator = '#',
+	update = function() {
+		if (loopStarted) {
+			clearCanvas();
+			drawPolygonFill();
+			drawMarkers();
+			if (isShowingGhostMarker) {
+				ghostMarker.scale(scale);
+				ghostMarker.draw();
+			}
+		}
+	},
+	action = function(fn) { // TODO: it would be good to encapsulate action items along with their undo actions
+		return {
+			undo: fn
+		};
+	},
+	undoActions = {
+		'newMarker': action(function() {
+			var lastMarker = markers.pop();
+			markerUndoStack.push(lastMarker);
+		}),
+		'dragMarker': action(function() {
+			if (draggingMarker) {
+				draggingMarker.moveTo(draggingMarkerInitialPosition);
+				draggingMarker = null;
+			}
+		})
+	},
+	// the undo stack contains undoActions
+	undoStack = [],
+	loopStarted = false,
+	// used because of the cookie setting; a couple of usage searches is all it takes to find out more...
+	addMarkerToCollection = (function() {
+		markers.push = function() {
+			throw "lulz";
+		};
+		return function(value, index) {
+			if (typeof index === "undefined") { // if not given, add it at the last
+				index = markers.length;
+			}
 
+			markers.splice(index, 0, value);
+
+			//markerUndoStack.length = 1;
+			//markerUndoStack.push(value);
+		};
+	} ()),
+	addMarker = function(position, color, collectionIndex) {
+		if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
+			collectionIndex = markers.length;
+		}
+
+		if (markers.length + 1 > maxVertices) {
+			return;
+		}
+
+		if (loopStarted) {
+			verticesCookie.append(position + verticesCookieSeperator);
+		}
+
+		color = color || defaultMarkerColor;
+		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
+		//markers.splice(collectionIndex, 0, newMarker);
+		addMarkerToCollection(newMarker, collectionIndex);
+		undoStack.push(undoActions.newMarker);
+		update();
+	};
+
+	(function() { // Load vertices from cookies, if they exist.
+		var verticesFromCookie = verticesCookie.value(),
+		parts,
+		i,
+		numVertices,
+		xY,
+		x,
+		y;
+
+		if (verticesFromCookie) {
+			verticesFromCookie = verticesFromCookie.split(verticesCookieSeperator);
+			for (i = 0, numVertices = verticesFromCookie.length - 1; i < numVertices; ++i) {
+				xY = verticesFromCookie[i].split(',');
+				x = xY[0];
+				y = xY[1];
+				addMarker(vector2(x, y));
+			}
+		}
+	} ());
 
 	var initializer = function() {
-		var drawImage = function(image, position, width, height) {
+		/*var drawImage = function(image, position, width, height) {
 			imageContext.drawImage(image, position.x, position.y, width, height);
 		},
-		addMarker = function(position, color, collectionIndex) {
-			if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
-				collectionIndex = markers.length;
-			}
-
-			if (markers.length + 1 > maxVertices) {
-				return;
-			}
-
-			if (loopStarted) {
-				verticesCookie.append(position + verticesCookieSeperator);
-			}
-
-			color = color || defaultMarkerColor;
-			var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
-			//markers.splice(collectionIndex, 0, newMarker);
-			addMarkerToCollection(newMarker, collectionIndex);
-			undoStack.push(undoActions.newMarker);
-			update();
-		},
-		drawPolygonFill = function(color) {
+		*/
+		var drawPolygonFill = function(color) {
 			if (!showPolygon || markers.length === 0) {
 				return;
 			}
@@ -111,15 +181,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		},
 		getVertices = function() {
 			return markers;
-		},
-		update = function() {
-			clearCanvas();
-			drawPolygonFill();
-			drawMarkers();
-			if (isShowingGhostMarker) {
-				ghostMarker.scale(scale);
-				ghostMarker.draw();
-			}
 		},
 		iterateMarkers = function(action) {
 			var i = 0,
@@ -158,40 +219,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 			return num;
 		},
-		addMarkerToCollection = (function() {
-			markers.push = function() {
-				throw "lulz";
-			};
-			return function(value, index) {
-				if (typeof index === "undefined") { // if not given, add it at the last
-					index = markers.length;
-				}
-
-				markers.splice(index, 0, value);
-
-				//markerUndoStack.length = 1;
-				//markerUndoStack.push(value);
-			};
-		} ()),
-		action = function(fn) { // TODO: it would be good to encapsulate action items along with their undo actions
-			return {
-				undo: fn
-			};
-		},
-		undoActions = {
-			'newMarker': action(function() {
-				var lastMarker = markers.pop();
-				markerUndoStack.push(lastMarker);
-			}),
-			'dragMarker': action(function() {
-				if (draggingMarker) {
-					draggingMarker.moveTo(draggingMarkerInitialPosition);
-					draggingMarker = null;
-				}
-			})
-		},
-		// the undo stack contains undoActions
-		undoStack = [],
 		draggingMarker,
 		draggingMarkerInitialPosition,
 		setScale = function(newScale) {
@@ -211,8 +238,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				return;
 			}
 			return scale;
-		},
-		loopStarted = false; // used because of the cookie setting; a couple of usage searches is all it takes to find out more...
+		};
 
 		/*
 		(function() { //set the scale from the cookies, if it exists there.
@@ -228,7 +254,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
-		loopStarted = true;
 
 		return {
 			getWidth: function() {
@@ -238,7 +263,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				return height;
 			},
 			scale: setScale,
-			drawImage: drawImage,
 			addMarker: addMarker,
 			addMarkerBetween: function(marker1, marker2, position) {
 				var marker1Index = getMarkerIndex(marker1),
@@ -351,29 +375,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			completeMarkerDrag: function() { // currently redundant
 			}
 		};
-
-	(function() { // Load vertices from cookies, if they exist.
-		var verticesFromCookie = verticesCookie.value(),
-		parts,
-		i,
-		numVertices,
-		xY,
-		x,
-		y;
-
-		if (verticesFromCookie) {
-			verticesFromCookie = verticesFromCookie.split(verticesCookieSeperator);
-			for (i = 0, numVertices = verticesFromCookie.length - 1; i < numVertices; ++i) {
-				xY = verticesFromCookie[i].split(',');
-				x = xY[0];
-				y = xY[1];
-				addMarker(vector2(x, y));
-			}
-		}
-	} ());
 	};
 
 	drawMainImage(callback);
 };
-
 
