@@ -1,10 +1,12 @@
 // TODO: Implement a couple of more gestures, like horizontalDrag and verticalDrag
+// TODO: Make the mouse library more cross-browser compatible -_-
+
 var mouse = function(el) {
 	var position = {
 		x: 0,
 		y: 0
 	},
-    	lastPosition = position,
+    	lastPosition = position, // currently not in use.  Will be used when implementing horizontalDrag etc...
 	moveAction = [],
 
 	freeDragAction = [],
@@ -22,10 +24,17 @@ var mouse = function(el) {
 	var getPosition = function(e) {
 		var x = e.clientX,
 		y = e.clientY;
+		
+		//Adjust according to the absolute coordinates of the element
 		if (typeof el.offsetTop !== "undefined" && typeof el.offsetLeft !== "undefined") {
 			x -= el.offsetLeft;
 			y -= el.offsetTop;
 		}
+
+		// Adjust according to the scrollbar positions
+		// TODO: (Put in some more cross-compatible code)
+		x += document.body.scrollLeft;
+		y += document.body.scrollTop;
 
 		return {
 			x: x,
@@ -72,7 +81,7 @@ var mouse = function(el) {
 	},
 	false);
 
-	el.addEventListener("DOMMouseScroll", function(e) {
+	var onMouseScroll = function(e) {
 		// Delta details from: http://adomas.org/javascript-mouse-wheel/
 		if (!wheelChangeAction.length && ! wheelUpAction.length && ! wheelDownAction.length) {
 			return;
@@ -101,8 +110,10 @@ var mouse = function(el) {
 		e.preventDefault && e.preventDefault();
 
 		e.returnValue = false;
-	},
-	false);
+	};
+
+	el.addEventListener("DOMMouseScroll", onMouseScroll, false); // Firefox
+	el.addEventListener("mousewheel", onMouseScroll, false); // Chrome
 
 	return {
 		position: function() {
