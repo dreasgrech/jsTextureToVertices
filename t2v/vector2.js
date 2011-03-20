@@ -25,7 +25,10 @@ var vector2 = function(x, y) {
 	}, out = {
 		x: x,
 		y: y,
-		isOnLine: liesBetween
+		isOnLine: liesBetween,
+		toString: function () {
+			return x + "," + y;
+		}
 	},  isBetween = function (value, n1, n2) {
 		var max = Math.max(n1, n2), min = Math.min(n1, n2);
 		return value > min && value < max;

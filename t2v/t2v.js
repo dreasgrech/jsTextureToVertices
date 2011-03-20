@@ -19,8 +19,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
-	clearMarkers = function(markers) {
+	scaleCookieName = 'scale',
+	scaleCookie = cookies.read(scaleCookieName) || cookies.create(scaleCookieName, ''),
+	verticesCookieName = 'vertices',
+	verticesCookie = cookies.read(verticesCookieName) || cookies.create(verticesCookieName, ''),
+	clearMarkers = function() {
 		markers.length = 0;
+		verticesCookie.value('');
 	},
 	currentImage,
 	drawLoadedImage = function(im) {
@@ -46,7 +51,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
 	isShowingGhostMarker,
-	initializer = function() {
+	verticesCookieSeperator = '#';
+
+
+	var initializer = function() {
 		var drawImage = function(image, position, width, height) {
 			imageContext.drawImage(image, position.x, position.y, width, height);
 		},
@@ -57,6 +65,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 			if (markers.length + 1 > maxVertices) {
 				return;
+			}
+
+			if (loopStarted) {
+				verticesCookie.append(position + verticesCookieSeperator);
 			}
 
 			color = color || defaultMarkerColor;
@@ -161,7 +173,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				//markerUndoStack.push(value);
 			};
 		} ()),
-		action = function(fn) {
+		action = function(fn) { // TODO: it would be good to encapsulate action items along with their undo actions
 			return {
 				undo: fn
 			};
@@ -178,15 +190,45 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				}
 			})
 		},
+		// the undo stack contains undoActions
 		undoStack = [],
-		// will contain undoActions
 		draggingMarker,
-		draggingMarkerInitialPosition;
+		draggingMarkerInitialPosition,
+		setScale = function(newScale) {
+			if (typeof newScale !== "undefined") {
+				if (newScale === scale) {
+					return;
+				}
+
+				iterateMarkers(function(marker) {
+					marker.scale(newScale);
+				});
+				scale = newScale;
+				if (loopStarted) {
+					scaleCookie.value(scale);
+				}
+				drawLoadedImage(currentImage);
+				return;
+			}
+			return scale;
+		},
+		loopStarted = false; // used because of the cookie setting; a couple of usage searches is all it takes to find out more...
+
+		/*
+		(function() { //set the scale from the cookies, if it exists there.
+			var scaleFromCookie = scaleCookie.value();
+			if (scaleFromCookie) {
+				setScale(+scaleFromCookie); // TODO: causing a double entrance, wtf?
+			}
+		} ());
+		*/
 
 		imageCanvas.style.left = position.x + 'px';
 		imageCanvas.style.top = position.y + 'px';
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
+
+		loopStarted = true;
 
 		return {
 			getWidth: function() {
@@ -195,22 +237,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			getHeight: function() {
 				return height;
 			},
-			scale: function(newScale) {
-				if (typeof newScale !== "undefined") {
-					if (newScale === scale) {
-						return;
-					}
-
-					iterateMarkers(function(marker) {
-						marker.scale(newScale);
-					});
-					scale = newScale;
-					update();
-					drawLoadedImage(currentImage);
-					return;
-				}
-				return scale;
-			},
+			scale: setScale,
 			drawImage: drawImage,
 			addMarker: addMarker,
 			addMarkerBetween: function(marker1, marker2, position) {
@@ -246,7 +273,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 					m.unselect();
 				});
 			},
-			clearMarkers: clearMarkers,
 			getMarkers: function() {
 				return markers;
 			},
@@ -267,7 +293,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				reader.onload = function(e) {
 					img.onload = function() {
 						drawLoadedImage(img);
-						clearMarkers(markers);
+						clearMarkers();
 					};
 					img.src = e.target.result;
 				};
@@ -288,9 +314,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			hideGhostMarker: function() {
 				isShowingGhostMarker = false;
 			},
-			clearPolygons: function() {
-				markers.length = 0;
-			},
+			clearMarkers: clearMarkers,
 			togglePolygonDisplay: function() {
 				showPolygon = ! showPolygon;
 			},
@@ -327,7 +351,29 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			completeMarkerDrag: function() { // currently redundant
 			}
 		};
+
+	(function() { // Load vertices from cookies, if they exist.
+		var verticesFromCookie = verticesCookie.value(),
+		parts,
+		i,
+		numVertices,
+		xY,
+		x,
+		y;
+
+		if (verticesFromCookie) {
+			verticesFromCookie = verticesFromCookie.split(verticesCookieSeperator);
+			for (i = 0, numVertices = verticesFromCookie.length - 1; i < numVertices; ++i) {
+				xY = verticesFromCookie[i].split(',');
+				x = xY[0];
+				y = xY[1];
+				addMarker(vector2(x, y));
+			}
+		}
+	} ());
 	};
 
 	drawMainImage(callback);
 };
+
+

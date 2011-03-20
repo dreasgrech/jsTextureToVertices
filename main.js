@@ -230,7 +230,7 @@
 				clearLink.innerHTML = "Clear";
 				clearLink.onclick = function() {
 					if (library.getMarkerCount() && confirm("Are you sure you want to remove all vertices?")) {
-						library.clearPolygons();
+						library.clearMarkers();
 					}
 				};
 				content.appendChild(clearLink);
