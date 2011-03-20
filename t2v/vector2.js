@@ -36,6 +36,10 @@ var vector2 = function(x, y) {
 
 // The Math.ceil in the vector2 static functions will probably be removed later on (I forgot why I put them in...)
 
+vector2.zero = function () {
+	return vector2(0, 0);
+};
+
 vector2.divide = function (vector, scalar) {
 		return vector2(Math.ceil(vector.x / scalar), Math.ceil(vector.y / scalar));
 };

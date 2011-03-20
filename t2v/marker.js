@@ -1,7 +1,7 @@
 var marker = function(context, position, width, height, scale, defaultColor) {
 	var pos = position,
 	previousPos, _scale = scale,
-	defaultSelectedColor = '#70E000',
+	defaultSelectedColor = 'rgb(128, 0, 255)',
 	isSelected = false,
 	boundingBox = function() {
 		var topLeft = {

@@ -1,15 +1,20 @@
 var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, position, image, maxVertices, callback) {
-	var markerRadius = 2,
+	var markerRadius = 1.5,
 	markerHeight = markerRadius,
 	defaultMarkerColor = 'rgba(255, 0, 0, 1)',
 	defaultGhostMarkerColor = 'rgba(255, 0, 0, 0.3)',
+	defaultFirstMarkerColor = 'rgb(255, 249, 4)',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
 	showPolygon = true,
 	// a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
 	showVertices = true,
 	scale = 1,
-	library, width, height, markers = [],
+	logs = logger(),
+	library,
+	width,
+	height,
+	markers = [],
 	markerUndoStack = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
@@ -29,11 +34,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.height = height;
 
 		library = initializer();
-		library.drawImage(im, {
-			x: 0,
-			y: 0
-		},
-		width, height);
+		library.drawImage(im, vector2.zero(), width, height);
 	},
 	drawMainImage = function(callback) {
 		var im = document.createElement("img");
@@ -43,11 +44,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		};
 		im.src = image;
 	},
-	ghostMarker = marker(polygonContext, {
-		x: 0,
-		y: 0
-	},
-	markerRadius, markerHeight, scale, defaultGhostMarkerColor),
+	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
 	isShowingGhostMarker,
 	initializer = function() {
 		var drawImage = function(image, position, width, height) {
@@ -90,7 +87,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 
 			iterateMarkers(function(marker, i) {
-				if (i === markers.length - 1) { // last marker
+				if (i == 0) { // first marker
+					marker.draw(defaultFirstMarkerColor);
+				}
+				else if (i === markers.length - 1) { // last marker
 					marker.draw(defaultLastMarkerColor);
 				} else {
 					marker.draw();
@@ -304,10 +304,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 					lastAction.undo();
 				}
 			},
-			undoMarker: function() {
-				var lastMarker = markers.pop();
-				markerUndoStack.push(lastMarker);
-				//markers.length = !markers.length ? 0 : markers.length - 1;
+			redo: function() { // redo whatever action was "undoed" (is that even a word?)
+				//TODO: implementation
+				alert('Currently non functional');
 			},
 			redoMarker: function() {
 				if (markerUndoStack.length) {
@@ -332,4 +331,3 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 	drawMainImage(callback);
 };
-

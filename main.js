@@ -266,9 +266,7 @@
 					content.appendChild(polygonDisplayToggle);
 					content.appendChild(verticesDisplayToggle);
 					content.appendChild(getButtonOption('Undo', library.undo));
-					//content.appendChild(getButtonOption('Undo', library.undoMarker));
-					//content.appendChild(getButtonOption('Redo', library.redoMarker));
-
+					content.appendChild(getButtonOption('Redo', library.redo));
 			});
 
 			(function(introContainerID) {
