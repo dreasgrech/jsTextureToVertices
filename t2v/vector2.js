@@ -26,10 +26,7 @@ var vector2 = function(x, y) {
 		x: x,
 		y: y,
 		isOnLine: liesBetween
-	}, round = function (value, decimalPlaces) {
-		var n = 10 * decimalPlaces;
-		return Math.round(value * n) / n;
-	}, isBetween = function (value, n1, n2) {
+	},  isBetween = function (value, n1, n2) {
 		var max = Math.max(n1, n2), min = Math.min(n1, n2);
 		return value > min && value < max;
 	};

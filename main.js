@@ -1,4 +1,5 @@
 (function() {
+	// TODO: Create the canvas dynamically, instead of getting references to them
 	var initialImageFilename = "images/block.png";
 	var imageCanvas = document.getElementById('imageCanvas'),
 	polygonCanvas = document.getElementById('polygonCanvas'),
@@ -8,8 +9,8 @@
 		var imageContext = imageCanvas.getContext('2d'),
 		polygonContext = polygonCanvas.getContext('2d'),
 		// TODO: https://github.com/dreasgrech/jsTextureToVertices/issues/2
-		maxVertices = 50,
-		scaleStep = 0.1,
+		maxVertices = 500,
+		scaleStep = 0.5,
 		xRawFormat = 'x',
 		yRawFormat = 'y',
 		defaultRawFormat = '(' + xRawFormat + ', ' + yRawFormat + ')';
@@ -55,12 +56,14 @@
 			},
 			'Dashboard', 'dashboard', 'verticesHeader'),
 			verticesWidget = db.getWidget(),
-			displayVerticesSectionWidth = 100;
-
-		var displayVerticesSection = (function() {
-				 //var addVertexDisplay = function (
-
-				 return db.addSection(displayVerticesSectionWidth, function(content) {
+			displayVerticesSectionWidth = 100,
+			round = function(value, decimalPlaces) {
+				var n = 10 * decimalPlaces;
+				return Math.round(value * n) / n;
+			},
+			displayVerticesSection = (function() {
+				//var addVertexDisplay = function (
+				return db.addSection(displayVerticesSectionWidth, function(content) {
 					var output = [],
 					i,
 					vertex,
@@ -148,7 +151,8 @@
 			});
 
 			bodyMouseInput.wheelUp(function(delta) {
-				library.scale(library.scale() + scaleStep);
+				var newScale = round(library.scale() + scaleStep, 2);
+				library.scale(newScale);
 				scaleSection.update();
 			});
 
@@ -156,9 +160,9 @@
 				var scale = library.scale();
 
 				// clamp the scale to the scaleStep
-				scale = (scale - scaleStep <= 0) ? scaleStep : scale - scaleStep;
+				scale = (scale - scaleStep <= 0) ? scaleStep: scale - scaleStep;
 
-				library.scale(scale);
+				library.scale(round(scale, 2));
 				scaleSection.update();
 			});
 
