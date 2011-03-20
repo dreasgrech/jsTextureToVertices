@@ -1,6 +1,6 @@
 var marker = function(context, position, width, height, scale, defaultColor) {
 	var pos = position,
-	_scale = scale,
+	previousPos, _scale = scale,
 	defaultSelectedColor = '#70E000',
 	isSelected = false,
 	boundingBox = function() {
@@ -37,6 +37,9 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		position: function() {
 			return pos;
 		},
+		previousPosition: function() {
+			return previousPos;
+		},
 		scaledPosition: function() {
 			return vector2.multiply(pos, _scale);
 		},
@@ -50,7 +53,8 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 			return _scale;
 		},
 		boundingBox: boundingBox,
-		moveTo: function(newPosition) {
+		moveTo: function(newPosition) { // Do not call this function directly; use the delegation through the main library.
+			previousPos = vector2(pos);
 			pos = newPosition;
 		},
 		isPointOn: function(point) {
@@ -68,4 +72,3 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		}
 	};
 };
-

@@ -18,7 +18,6 @@
 			var canvasMouseInput = mouse(polygonCanvas),
 			//bodyMouseInput = mouse(document.body),
 			bodyMouseInput = mouse(document),
-			draggingVertex,
 			draggingWidget,
 			draggingWidgetMouseOffset,
 			getVerticesPositionsHTML = function(vertices, format) {
@@ -169,21 +168,18 @@
 			canvasMouseInput.freeDragStart(function(pos) {
 				var marker = library.getMarkerAt(pos);
 				if (marker) {
-					draggingVertex = marker;
+					library.startMarkerDrag(marker);
 				}
 			});
 
 			canvasMouseInput.freeDrag(function(pos) {
-				if (draggingVertex) { // currently dragging a vertex
-					pos = vector2.divide(pos, library.scale());
-					draggingVertex.moveTo(pos);
-				}
+				library.markerDrag(pos);
 
 				displayVerticesSection.update();
 			});
 
 			canvasMouseInput.freeDragComplete(function(pos) {
-				draggingVertex = null;
+				library.completeMarkerDrag();
 			});
 
 			fileDragDrop(polygonCanvas, function(files) { // Handles the dragging and dropping of files to the canvas
@@ -269,8 +265,9 @@
 
 					content.appendChild(polygonDisplayToggle);
 					content.appendChild(verticesDisplayToggle);
-					content.appendChild(getButtonOption('Undo', library.undoMarker));
-					content.appendChild(getButtonOption('Redo', library.redoMarker));
+					content.appendChild(getButtonOption('Undo', library.undo));
+					//content.appendChild(getButtonOption('Undo', library.undoMarker));
+					//content.appendChild(getButtonOption('Redo', library.redoMarker));
 
 			});
 

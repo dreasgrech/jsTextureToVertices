@@ -5,10 +5,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	defaultGhostMarkerColor = 'rgba(255, 0, 0, 0.3)',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
-	showPolygon = true, // a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
+	showPolygon = true,
+	// a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
 	showVertices = true,
 	scale = 1,
-	library, width, height, markers = [], markerUndoStack = [],
+	library, width, height, markers = [],
+	markerUndoStack = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -64,6 +66,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
 			//markers.splice(collectionIndex, 0, newMarker);
 			addMarkerToCollection(newMarker, collectionIndex);
+			undoStack.push(undoActions.newMarker);
 			update();
 		},
 		drawPolygonFill = function(color) {
@@ -142,16 +145,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 
 			return num;
-		};
-
-		imageCanvas.style.left = position.x + 'px';
-		imageCanvas.style.top = position.y + 'px';
-		polygonCanvas.style.left = position.x + 'px';
-		polygonCanvas.style.top = position.y + 'px';
-
-		var addMarkerToCollection = (function () {
-			 markers.push = function () {throw "lulz";};
-			 return function (value, index) {
+		},
+		addMarkerToCollection = (function() {
+			markers.push = function() {
+				throw "lulz";
+			};
+			return function(value, index) {
 				if (typeof index === "undefined") { // if not given, add it at the last
 					index = markers.length;
 				}
@@ -161,7 +160,33 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				//markerUndoStack.length = 1;
 				//markerUndoStack.push(value);
 			};
-		}());
+		} ()),
+		action = function(fn) {
+			return {
+				undo: fn
+			};
+		},
+		undoActions = {
+			'newMarker': action(function() {
+				var lastMarker = markers.pop();
+				markerUndoStack.push(lastMarker);
+			}),
+			'dragMarker': action(function() {
+				if (draggingMarker) {
+					draggingMarker.moveTo(draggingMarkerInitialPosition);
+					draggingMarker = null;
+				}
+			})
+		},
+		undoStack = [],
+		// will contain undoActions
+		draggingMarker,
+		draggingMarkerInitialPosition;
+
+		imageCanvas.style.left = position.x + 'px';
+		imageCanvas.style.top = position.y + 'px';
+		polygonCanvas.style.left = position.x + 'px';
+		polygonCanvas.style.top = position.y + 'px';
 
 		return {
 			getWidth: function() {
@@ -205,6 +230,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 						return marker;
 					}
 				});
+			},
+			moveMarker: function(marker, newUnscaledPosition) { // currently unused
+				var pos = vector2.divide(newUnscaledPosition, scale);
+				marker.moveTo(pos);
+				undoStack.push(undoActions.dragMarker);
 			},
 			update: update,
 			setSelectedMarker: function(marker) {
@@ -260,18 +290,42 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			},
 			clearPolygons: function() {
 				markers.length = 0;
-			}, togglePolygonDisplay: function () {
-				showPolygon = !showPolygon; 
-			}, toggleVerticesDisplay: function () {
-				showVertices = !showVertices; 
-			}, undoMarker: function () {
+			},
+			togglePolygonDisplay: function() {
+				showPolygon = ! showPolygon;
+			},
+			toggleVerticesDisplay: function() {
+				showVertices = ! showVertices;
+			},
+			undo: function() { // undo whatever action was last committed
+				var lastAction;
+				if (undoStack.length) {
+					lastAction = undoStack.pop();
+					lastAction.undo();
+				}
+			},
+			undoMarker: function() {
 				var lastMarker = markers.pop();
 				markerUndoStack.push(lastMarker);
 				//markers.length = !markers.length ? 0 : markers.length - 1;
-			}, redoMarker: function () {
+			},
+			redoMarker: function() {
 				if (markerUndoStack.length) {
 					addMarkerToCollection(markerUndoStack.pop());
 				}
+			},
+			startMarkerDrag: function(m) {
+				draggingMarker = m;
+				draggingMarkerInitialPosition = vector2(draggingMarker.position());
+				undoStack.push(undoActions.dragMarker);
+			},
+			markerDrag: function(p) {
+				if (draggingMarker) {
+					p = vector2.divide(p, scale);
+					draggingMarker.moveTo(p);
+				}
+			},
+			completeMarkerDrag: function() { // currently redundant
 			}
 		};
 	};
