@@ -6,6 +6,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
 	showPolygon = true, // a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
+	showVertices = true,
 	scale = 1,
 	library, width, height, markers = [],
 	clearCanvas = function() {
@@ -80,6 +81,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			polygonContext.fill();
 		},
 		drawMarkers = function() {
+			if (!showVertices) {
+				return;
+			}
+
 			iterateMarkers(function(marker, i) {
 				if (i === markers.length - 1) { // last marker
 					marker.draw(defaultLastMarkerColor);
@@ -242,6 +247,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				markers.length = 0;
 			}, togglePolygonDisplay: function () {
 				showPolygon = !showPolygon; 
+			}, toggleVerticesDisplay: function () {
+				showVertices = !showVertices; 
 			}
 		};
 	};

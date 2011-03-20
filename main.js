@@ -241,15 +241,26 @@
 
 			});
 
-			db.addSection(100, function (content) {
-					var drawPolygon = document.createElement('input');
-					drawPolygon.type = "checkbox";
-					drawPolygon.checked = true;
-					drawPolygon.onchange = function () {
-						library.togglePolygonDisplay();
-					};
+			var getToggleOption = function (label, changeHandler, checked) {
+				// TODO: label is currently unused; use it!
+				
+				if (typeof checked === "undefined") {
+					checked = true;
+				}
 
-					content.appendChild(drawPolygon);
+				var option = document.createElement('input');
+				option.type = "checkbox";
+				option.checked = checked;
+				option.onchange = changeHandler;
+				return option;
+			};
+
+			db.addSection(100, function (content) {
+					var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true),
+					    verticesDisplayToggle = getToggleOption("Toggle polygon", library.toggleVerticesDisplay, true);
+
+					content.appendChild(polygonDisplayToggle);
+					content.appendChild(verticesDisplayToggle);
 
 			});
 
