@@ -8,7 +8,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	showPolygon = true, // a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
 	showVertices = true,
 	scale = 1,
-	library, width, height, markers = [],
+	library, width, height, markers = [], markerUndoStack = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -62,7 +62,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 			color = color || defaultMarkerColor;
 			var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
-			markers.splice(collectionIndex, 0, newMarker);
+			//markers.splice(collectionIndex, 0, newMarker);
+			addMarkerToCollection(newMarker, collectionIndex);
 			update();
 		},
 		drawPolygonFill = function(color) {
@@ -147,6 +148,20 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		imageCanvas.style.top = position.y + 'px';
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
+
+		var addMarkerToCollection = (function () {
+			 markers.push = function () {throw "lulz";};
+			 return function (value, index) {
+				if (typeof index === "undefined") { // if not given, add it at the last
+					index = markers.length;
+				}
+
+				markers.splice(index, 0, value);
+
+				//markerUndoStack.length = 1;
+				//markerUndoStack.push(value);
+			};
+		}());
 
 		return {
 			getWidth: function() {
@@ -249,6 +264,14 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				showPolygon = !showPolygon; 
 			}, toggleVerticesDisplay: function () {
 				showVertices = !showVertices; 
+			}, undoMarker: function () {
+				var lastMarker = markers.pop();
+				markerUndoStack.push(lastMarker);
+				//markers.length = !markers.length ? 0 : markers.length - 1;
+			}, redoMarker: function () {
+				if (markerUndoStack.length) {
+					addMarkerToCollection(markerUndoStack.pop());
+				}
 			}
 		};
 	};
