@@ -28,6 +28,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		verticesCookie.value('');
 	},
 	currentImage,
+		drawImage = function(image, position, width, height) {
+			imageContext.drawImage(image, position.x, position.y, width, height);
+		},
 	drawLoadedImage = function(im) {
 		currentImage = im;
 		width = im.width * scale;
@@ -38,10 +41,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.width = width;
 		polygonCanvas.height = height;
 
-		//library = initializer();
-		//library.drawImage(im, vector2.zero(), width, height);
-		console.log(imageContext, im, width, height, vector2.zero());
-			imageContext.drawImage(im, vector2.zero(), width, height);
+		imageCanvas.style.left = position.x + 'px';
+		imageCanvas.style.top = position.y + 'px';
+		polygonCanvas.style.left = position.x + 'px';
+		polygonCanvas.style.top = position.y + 'px';
+
+		library = initializer();
+		drawImage(im, vector2.zero(), width, height);
 		loopStarted = true;
 	},
 	drawMainImage = function(callback) {
@@ -55,6 +61,48 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
 	isShowingGhostMarker,
 	verticesCookieSeperator = '#',
+	iterateMarkers = function(action) {
+		var i = 0,
+		j = markers.length,
+		stop;
+		for (; i < j; ++i) {
+			stop = action(markers[i], i)
+			if (typeof stop !== "undefined") {
+				return stop;
+			}
+		}
+	},
+	drawPolygonFill = function(color) {
+		if (!showPolygon || markers.length === 0) {
+			return;
+		}
+
+		color = color || defaultFillColor;
+		polygonContext.fillStyle = color;
+		polygonContext.beginPath();
+		polygonContext.moveTo(markers[0].scaledPosition().x, markers[0].scaledPosition().y);
+		iterateMarkers(function(marker) {
+			polygonContext.lineTo(marker.scaledPosition().x, marker.scaledPosition().y);
+		});
+		polygonContext.closePath();
+		polygonContext.fill();
+	},
+	drawMarkers = function() {
+		if (!showVertices) {
+			return;
+		}
+
+		iterateMarkers(function(marker, i) {
+			if (i == 0) { // first marker
+				marker.draw(defaultFirstMarkerColor);
+			}
+			else if (i === markers.length - 1) { // last marker
+				marker.draw(defaultLastMarkerColor);
+			} else {
+				marker.draw();
+			}
+		});
+	},
 	update = function() {
 		if (loopStarted) {
 			clearCanvas();
@@ -71,6 +119,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			undo: fn
 		};
 	},
+	draggingMarker,
+	draggingMarkerInitialPosition,
 	undoActions = {
 		'newMarker': action(function() {
 			var lastMarker = markers.pop();
@@ -121,7 +171,54 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		addMarkerToCollection(newMarker, collectionIndex);
 		undoStack.push(undoActions.newMarker);
 		update();
-	};
+	},
+	iterateEdges = function(action) {
+		var i = 0,
+		j = markers.length,
+		nextVertex, stop;
+
+		return iterateMarkers(function(marker, index) {
+			nextVertex = (index + 1) % j;
+			if (stop = action(markers[index], markers[nextVertex])) {
+				return stop;
+			}
+
+		});
+	},
+	getVertices = function() {
+		return markers;
+	},
+	getMarkerIndex = function(marker) {
+		var num = iterateMarkers(function(m, index) {
+			if (vector2.areEqual(m.position(), marker.position())) {
+				return index;
+			}
+		});
+
+		if (typeof num === "undefined") {
+			throw "Something went wrong; a marker should always have an index";
+		}
+
+		return num;
+	},
+		setScale = function(newScale) {
+			if (typeof newScale !== "undefined") {
+				if (newScale === scale) {
+					return;
+				}
+
+				iterateMarkers(function(marker) {
+					marker.scale(newScale);
+				});
+				scale = newScale;
+				if (loopStarted) {
+					scaleCookie.value(scale);
+				}
+				drawLoadedImage(currentImage);
+				return;
+			}
+			return scale;
+		};
 
 	(function() { // Load vertices from cookies, if they exist.
 		var verticesFromCookie = verticesCookie.value(),
@@ -144,101 +241,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	} ());
 
 	var initializer = function() {
-		/*var drawImage = function(image, position, width, height) {
-			imageContext.drawImage(image, position.x, position.y, width, height);
-		},
-		*/
-		var drawPolygonFill = function(color) {
-			if (!showPolygon || markers.length === 0) {
-				return;
-			}
-
-			color = color || defaultFillColor;
-			polygonContext.fillStyle = color;
-			polygonContext.beginPath();
-			polygonContext.moveTo(markers[0].scaledPosition().x, markers[0].scaledPosition().y);
-			iterateMarkers(function(marker) {
-				polygonContext.lineTo(marker.scaledPosition().x, marker.scaledPosition().y);
-			});
-			polygonContext.closePath();
-			polygonContext.fill();
-		},
-		drawMarkers = function() {
-			if (!showVertices) {
-				return;
-			}
-
-			iterateMarkers(function(marker, i) {
-				if (i == 0) { // first marker
-					marker.draw(defaultFirstMarkerColor);
-				}
-				else if (i === markers.length - 1) { // last marker
-					marker.draw(defaultLastMarkerColor);
-				} else {
-					marker.draw();
-				}
-			});
-		},
-		getVertices = function() {
-			return markers;
-		},
-		iterateMarkers = function(action) {
-			var i = 0,
-			j = markers.length,
-			stop;
-			for (; i < j; ++i) {
-				stop = action(markers[i], i)
-				if (typeof stop !== "undefined") {
-					return stop;
-				}
-			}
-		},
-		iterateEdges = function(action) {
-			var i = 0,
-			j = markers.length,
-			nextVertex, stop;
-
-			return iterateMarkers(function(marker, index) {
-				nextVertex = (index + 1) % j;
-				if (stop = action(markers[index], markers[nextVertex])) {
-					return stop;
-				}
-
-			});
-		},
-		getMarkerIndex = function(marker) {
-			var num = iterateMarkers(function(m, index) {
-				if (vector2.areEqual(m.position(), marker.position())) {
-					return index;
-				}
-			});
-
-			if (typeof num === "undefined") {
-				throw "Something went wrong; a marker should always have an index";
-			}
-
-			return num;
-		},
-		draggingMarker,
-		draggingMarkerInitialPosition,
-		setScale = function(newScale) {
-			if (typeof newScale !== "undefined") {
-				if (newScale === scale) {
-					return;
-				}
-
-				iterateMarkers(function(marker) {
-					marker.scale(newScale);
-				});
-				scale = newScale;
-				if (loopStarted) {
-					scaleCookie.value(scale);
-				}
-				drawLoadedImage(currentImage);
-				return;
-			}
-			return scale;
-		};
 
 		/*
 		(function() { //set the scale from the cookies, if it exists there.
@@ -248,11 +250,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 		} ());
 		*/
-
-		imageCanvas.style.left = position.x + 'px';
-		imageCanvas.style.top = position.y + 'px';
-		polygonCanvas.style.left = position.x + 'px';
-		polygonCanvas.style.top = position.y + 'px';
 
 
 		return {
