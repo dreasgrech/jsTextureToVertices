@@ -20,7 +20,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	verticesCookieSeperator = '#',
 	scaleCookieName = 'scale',
-	verticesCookieName = 'vertices',
+	verticesCookieName = 'vertices-list',
 	scaleCookie = cookies.read(scaleCookieName) || cookies.create(scaleCookieName, ''),
 	verticesCookie = cookies.read(verticesCookieName) || cookies.create(verticesCookieName, ''),
 	clearMarkers = function() {
@@ -56,7 +56,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		};
 		im.src = image;
 	},
-	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
+	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor), // that semi invisible marker that appears whenever the mouse is hovering on an edge
 	isShowingGhostMarker,
 	iterateMarkers = function(action) {
 		var i = 0,
@@ -162,7 +162,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			collectionIndex = markers.length;
 		}
 
-		if (markers.length + 1 > maxVertices) {
+		if (markers.length + 1 > maxVertices) { // currently at the limit of the number of vertices that can be added
 			return;
 		}
 
@@ -224,7 +224,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		}
 		return scale;
 	},
-	library = { // this object contains the functions that are exposed to the client
+	library = { // this object contains the functions that are exposed to the outside
 		getWidth: function() {
 			return width;
 		},
@@ -341,7 +341,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				draggingMarker.moveTo(p);
 			}
 		},
-		completeMarkerDrag: function() { // currently redundant
+		completeMarkerDrag: function() {
+		    draggingMarker = null;
 			writeMarkersToCookie();
 		}
 	};
