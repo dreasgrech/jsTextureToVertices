@@ -27,14 +27,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		markers.length = 0;
 		verticesCookie.value('');
 	},
-	currentImage,
 	drawImage = function(image, position, width, height) {
 		imageContext.drawImage(image, position.x, position.y, width, height);
 	},
-	drawLoadedImage = function(im) {
-		currentImage = im;
-		width = im.width * scale;
-		height = im.height * scale;
+	drawLoadedImage = function() {
+		width = imageHolder.width * scale;
+		height = imageHolder.height * scale;
 
 		imageCanvas.width = width;
 		imageCanvas.height = height;
@@ -46,17 +44,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
-		drawImage(im, vector2.zero(), width, height);
+		drawImage(imageHolder, vector2.zero(), width, height);
 	},
-	drawMainImage = function(callback) {
-		var im = document.createElement("img");
-		im.onload = function() {
-			drawLoadedImage(im);
-			callback && callback(library);
-		};
-		im.src = image;
-	},
-	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor), // that semi invisible marker that appears whenever the mouse is hovering on an edge
+	imageHolder = document.createElement("img"),
+	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
+	// that semi invisible marker that appears whenever the mouse is hovering on an edge
 	isShowingGhostMarker,
 	iterateMarkers = function(action) {
 		var i = 0,
@@ -220,7 +212,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				scaleCookie.value(scale);
 			}
 
-			drawMainImage();
+			drawLoadedImage();
 			return;
 		}
 		return scale;
@@ -278,18 +270,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
 			}
 
-			var img = document.createElement("img"),
-			reader;
-			img.id = "pic";
-			img.file = clientImage;
-
-			reader = new FileReader();
+			//imageHolder.file = clientImage; // the example I got this from used this line, but it still works when it's not there; needs further research
+			var reader = new FileReader();
 			reader.onload = function(e) {
-				img.onload = function() {
-					drawLoadedImage(img);
-					clearMarkers();
-				};
-				img.src = e.target.result;
+				// changing the src property will cause imageHolder.onload to trigger
+				imageHolder.src = e.target.result; 
 			};
 			reader.readAsDataURL(clientImage);
 		},
@@ -343,7 +328,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 		},
 		completeMarkerDrag: function() {
-		    draggingMarker = null;
+			draggingMarker = null;
 			writeMarkersToCookie();
 		}
 	};
@@ -374,11 +359,28 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	(function() { //set the scale from the cookies, if it exists there.
 		var scaleFromCookie = scaleCookie.value();
 		if (scaleFromCookie) {
-			setScale(+scaleFromCookie);
+			//setScale(+scaleFromCookie);
 		}
 	} ());
 
+	imageHolder.onload = function() {
+		drawLoadedImage();
+		imageHolder.onload = function() { 
+
+			/* overwriting the handler because I want the markers to be cleared after a new image has been loaded ONLY.
+			 * If I didn't do this, then the cookie markers would be deleted after the main image loads.
+			 * What I could also do is draw the main image (and clear markers always) before adding the cookie markers...
+			 */
+
+			drawLoadedImage();
+			clearMarkers();
+		};
+	};
+
+	imageHolder.src = image;
+
+	callback(library);
+
 	loopStarted = true;
-	drawMainImage(callback);
 };
 
