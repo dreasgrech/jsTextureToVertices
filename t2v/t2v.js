@@ -132,7 +132,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	// the undo stack contains undoActions
 	undoStack = [],
-	loopStarted = false, // loopStart is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
+	loopStarted = false,
+	// loopStart is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
 	addMarkerToCollection = (function() {
 		markers.push = function() {
 			throw "lulz";
@@ -148,6 +149,14 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			//markerUndoStack.push(value);
 		};
 	} ()),
+	writeMarkersToCookie = function() {
+		var cookieValue = [];
+		iterateMarkers(function(m) {
+			cookieValue.push(m.position());
+		});
+
+		verticesCookie.value(cookieValue.join(verticesCookieSeperator));
+	},
 	addMarker = function(position, color, collectionIndex) {
 		if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
 			collectionIndex = markers.length;
@@ -157,14 +166,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			return;
 		}
 
-		if (loopStarted) {
-			verticesCookie.append(position + verticesCookieSeperator);
-		}
-
 		color = color || defaultMarkerColor;
 		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
 		addMarkerToCollection(newMarker, collectionIndex);
 		undoStack.push(undoActions.newMarker);
+		if (loopStarted) {
+			writeMarkersToCookie();
+		}
 		update();
 	},
 	iterateEdges = function(action) {
@@ -334,6 +342,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 		},
 		completeMarkerDrag: function() { // currently redundant
+			writeMarkersToCookie();
 		}
 	};
 
@@ -348,7 +357,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		if (verticesFromCookie) {
 			verticesFromCookie = verticesFromCookie.split(verticesCookieSeperator);
-			for (i = 0, numVertices = verticesFromCookie.length - 1; i < numVertices; ++i) {
+			for (i = 0, numVertices = verticesFromCookie.length; i < numVertices; ++i) {
+				if (!verticesFromCookie[i]) {
+					continue;
+				}
 				xY = verticesFromCookie[i].split(',');
 				x = xY[0];
 				y = xY[1];
@@ -360,10 +372,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	(function() { //set the scale from the cookies, if it exists there.
 		var scaleFromCookie = scaleCookie.value();
 		if (scaleFromCookie) {
-			setScale( + scaleFromCookie);
+			setScale(+scaleFromCookie);
 		}
 	} ());
 
 	loopStarted = true;
 	drawMainImage(callback);
 };
+
