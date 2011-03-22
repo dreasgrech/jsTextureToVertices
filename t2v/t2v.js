@@ -11,7 +11,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	showVertices = true,
 	scale = 1,
 	logs = logger(),
-	library,
 	width,
 	height,
 	markers = [],
@@ -28,9 +27,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		verticesCookie.value('');
 	},
 	currentImage,
-		drawImage = function(image, position, width, height) {
-			imageContext.drawImage(image, position.x, position.y, width, height);
-		},
+	drawImage = function(image, position, width, height) {
+		imageContext.drawImage(image, position.x, position.y, width, height);
+	},
 	drawLoadedImage = function(im) {
 		currentImage = im;
 		width = im.width * scale;
@@ -46,7 +45,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
-		library = initializer();
+		console.log('s');
+		//library = initializer();
 		drawImage(im, vector2.zero(), width, height);
 		loopStarted = true;
 	},
@@ -201,24 +201,144 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		return num;
 	},
-		setScale = function(newScale) {
-			if (typeof newScale !== "undefined") {
-				if (newScale === scale) {
-					return;
-				}
-
-				iterateMarkers(function(marker) {
-					marker.scale(newScale);
-				});
-				scale = newScale;
-				if (loopStarted) {
-					scaleCookie.value(scale);
-				}
-				drawLoadedImage(currentImage);
+	setScale = function(newScale) {
+		if (typeof newScale !== "undefined") {
+			if (newScale === scale) {
 				return;
 			}
-			return scale;
-		};
+
+			iterateMarkers(function(marker) {
+				marker.scale(newScale);
+			});
+			scale = newScale;
+			if (loopStarted) {
+				scaleCookie.value(scale);
+			}
+			drawLoadedImage(currentImage);
+			return;
+		}
+		return scale;
+	},
+	library = {
+		getWidth: function() {
+			return width;
+		},
+		getHeight: function() {
+			return height;
+		},
+		scale: setScale,
+		addMarker: addMarker,
+		addMarkerBetween: function(marker1, marker2, position) {
+			var marker1Index = getMarkerIndex(marker1),
+			marker2Index = getMarkerIndex(marker2);
+			collectionIndex = Math.max(marker1Index, marker2Index);
+			if (Math.max(marker1Index, marker2Index) === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
+				collectionIndex++;
+			}
+
+			addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
+		},
+		getVertices: getVertices,
+		getMarkerAt: function(position) {
+			return iterateMarkers(function(marker) {
+				if (marker.isPointOn(position)) {
+					return marker;
+				}
+			});
+		},
+		moveMarker: function(marker, newUnscaledPosition) { // currently unused
+			var pos = vector2.divide(newUnscaledPosition, scale);
+			marker.moveTo(pos);
+			undoStack.push(undoActions.dragMarker);
+		},
+		update: update,
+		setSelectedMarker: function(marker) {
+			iterateMarkers(function(m) {
+				if (m === marker) {
+					m.select();
+					return;
+				}
+				m.unselect();
+			});
+		},
+		getMarkers: function() {
+			return markers;
+		},
+		getMarkerCount: function() {
+			return markers.length;
+		},
+		loadNewImage: function(clientImage) {
+			if (!clientImage.toString().indexOf("File]")) {
+				throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
+			}
+
+			var img = document.createElement("img"),
+			reader;
+			img.id = "pic";
+			img.file = clientImage;
+
+			reader = new FileReader();
+			reader.onload = function(e) {
+				img.onload = function() {
+					drawLoadedImage(img);
+					clearMarkers();
+				};
+				img.src = e.target.result;
+			};
+			reader.readAsDataURL(clientImage);
+		},
+		isPointOnEdge: function(point) {
+			point = vector2(point);
+			return iterateEdges(function(vertex1, vertex2) {
+				if (point.isOnLine([vertex1.scaledPosition(), vertex2.scaledPosition()])) {
+					return [vertex1, vertex2];
+				}
+			});
+		},
+		showGhostMarker: function(position) {
+			isShowingGhostMarker = true;
+			ghostMarker.moveTo(position);
+		},
+		hideGhostMarker: function() {
+			isShowingGhostMarker = false;
+		},
+		clearMarkers: clearMarkers,
+		togglePolygonDisplay: function() {
+			showPolygon = ! showPolygon;
+		},
+		toggleVerticesDisplay: function() {
+			showVertices = ! showVertices;
+		},
+		undo: function() { // undo whatever action was last committed
+			var lastAction;
+			if (undoStack.length) {
+				lastAction = undoStack.pop();
+				lastAction.undo();
+			}
+		},
+		redo: function() { // redo whatever action was "undoed" (is that even a word?)
+			//TODO: implementation
+			alert('Currently non functional');
+		},
+		redoMarker: function() {
+			if (markerUndoStack.length) {
+				addMarkerToCollection(markerUndoStack.pop());
+			}
+		},
+		startMarkerDrag: function(m) {
+			draggingMarker = m;
+			draggingMarkerInitialPosition = vector2(draggingMarker.position());
+			undoStack.push(undoActions.dragMarker);
+		},
+		markerDrag: function(p) {
+			if (draggingMarker) {
+				p = vector2.divide(p, scale);
+				draggingMarker.moveTo(p);
+			}
+		},
+		completeMarkerDrag: function() { // currently redundant
+		}
+	};
 
 	(function() { // Load vertices from cookies, if they exist.
 		var verticesFromCookie = verticesCookie.value(),
@@ -240,9 +360,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		}
 	} ());
 
-	var initializer = function() {
-
-		/*
+	/*
 		(function() { //set the scale from the cookies, if it exists there.
 			var scaleFromCookie = scaleCookie.value();
 			if (scaleFromCookie) {
@@ -251,129 +369,5 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		} ());
 		*/
 
-
-		return {
-			getWidth: function() {
-				return width;
-			},
-			getHeight: function() {
-				return height;
-			},
-			scale: setScale,
-			addMarker: addMarker,
-			addMarkerBetween: function(marker1, marker2, position) {
-				var marker1Index = getMarkerIndex(marker1),
-				marker2Index = getMarkerIndex(marker2);
-				collectionIndex = Math.max(marker1Index, marker2Index);
-				if (Math.max(marker1Index, marker2Index) === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
-					collectionIndex++;
-				}
-
-				addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
-			},
-			getVertices: getVertices,
-			getMarkerAt: function(position) {
-				return iterateMarkers(function(marker) {
-					if (marker.isPointOn(position)) {
-						return marker;
-					}
-				});
-			},
-			moveMarker: function(marker, newUnscaledPosition) { // currently unused
-				var pos = vector2.divide(newUnscaledPosition, scale);
-				marker.moveTo(pos);
-				undoStack.push(undoActions.dragMarker);
-			},
-			update: update,
-			setSelectedMarker: function(marker) {
-				iterateMarkers(function(m) {
-					if (m === marker) {
-						m.select();
-						return;
-					}
-					m.unselect();
-				});
-			},
-			getMarkers: function() {
-				return markers;
-			},
-			getMarkerCount: function() {
-				return markers.length;
-			},
-			loadNewImage: function(clientImage) {
-				if (!clientImage.toString().indexOf("File]")) {
-					throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
-				}
-
-				var img = document.createElement("img"),
-				reader;
-				img.id = "pic";
-				img.file = clientImage;
-
-				reader = new FileReader();
-				reader.onload = function(e) {
-					img.onload = function() {
-						drawLoadedImage(img);
-						clearMarkers();
-					};
-					img.src = e.target.result;
-				};
-				reader.readAsDataURL(clientImage);
-			},
-			isPointOnEdge: function(point) {
-				point = vector2(point);
-				return iterateEdges(function(vertex1, vertex2) {
-					if (point.isOnLine([vertex1.scaledPosition(), vertex2.scaledPosition()])) {
-						return [vertex1, vertex2];
-					}
-				});
-			},
-			showGhostMarker: function(position) {
-				isShowingGhostMarker = true;
-				ghostMarker.moveTo(position);
-			},
-			hideGhostMarker: function() {
-				isShowingGhostMarker = false;
-			},
-			clearMarkers: clearMarkers,
-			togglePolygonDisplay: function() {
-				showPolygon = ! showPolygon;
-			},
-			toggleVerticesDisplay: function() {
-				showVertices = ! showVertices;
-			},
-			undo: function() { // undo whatever action was last committed
-				var lastAction;
-				if (undoStack.length) {
-					lastAction = undoStack.pop();
-					lastAction.undo();
-				}
-			},
-			redo: function() { // redo whatever action was "undoed" (is that even a word?)
-				//TODO: implementation
-				alert('Currently non functional');
-			},
-			redoMarker: function() {
-				if (markerUndoStack.length) {
-					addMarkerToCollection(markerUndoStack.pop());
-				}
-			},
-			startMarkerDrag: function(m) {
-				draggingMarker = m;
-				draggingMarkerInitialPosition = vector2(draggingMarker.position());
-				undoStack.push(undoActions.dragMarker);
-			},
-			markerDrag: function(p) {
-				if (draggingMarker) {
-					p = vector2.divide(p, scale);
-					draggingMarker.moveTo(p);
-				}
-			},
-			completeMarkerDrag: function() { // currently redundant
-			}
-		};
-	};
-
 	drawMainImage(callback);
 };
-
