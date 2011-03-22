@@ -117,6 +117,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		};
 	},
 	draggingMarker,
+	lastMarkerDragged,
 	draggingMarkerInitialPosition,
 	undoActions = {
 		'newMarker': action(function() {
@@ -124,9 +125,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			markerUndoStack.push(lastMarker);
 		}),
 		'dragMarker': action(function() {
-			if (draggingMarker) {
-				draggingMarker.moveTo(draggingMarkerInitialPosition);
-				draggingMarker = null;
+			if (lastMarkerDragged) {
+				lastMarkerDragged.moveTo(draggingMarkerInitialPosition);
+				lastMarkerDragged = null;
 			}
 		})
 	},
@@ -169,9 +170,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		color = color || defaultMarkerColor;
 		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
 		addMarkerToCollection(newMarker, collectionIndex);
-		undoStack.push(undoActions.newMarker);
 		if (loopStarted) {
 			writeMarkersToCookie();
+			undoStack.push(undoActions.newMarker);
 		}
 		update();
 	},
@@ -331,7 +332,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 		},
 		startMarkerDrag: function(m) {
-			draggingMarker = m;
+			draggingMarker = lastMarkerDragged = m;
 			draggingMarkerInitialPosition = vector2(draggingMarker.position());
 			undoStack.push(undoActions.dragMarker);
 		},
