@@ -210,9 +210,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			scale = newScale;
 			if (loopStarted) {
 				scaleCookie.value(scale);
+				drawLoadedImage();
 			}
 
-			drawLoadedImage();
 			return;
 		}
 		return scale;
@@ -359,7 +359,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	(function() { //set the scale from the cookies, if it exists there.
 		var scaleFromCookie = scaleCookie.value();
 		if (scaleFromCookie) {
-			//setScale(+scaleFromCookie);
+			setScale(+scaleFromCookie);
 		}
 	} ());
 
