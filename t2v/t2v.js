@@ -45,8 +45,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.left = position.x + 'px';
 		polygonCanvas.style.top = position.y + 'px';
 
-		console.log('s');
-		//library = initializer();
 		drawImage(im, vector2.zero(), width, height);
 		loopStarted = true;
 	},
@@ -54,7 +52,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		var im = document.createElement("img");
 		im.onload = function() {
 			drawLoadedImage(im);
-			callback(library);
+			callback && callback(library);
 		};
 		im.src = image;
 	},
@@ -210,11 +208,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			iterateMarkers(function(marker) {
 				marker.scale(newScale);
 			});
+
 			scale = newScale;
 			if (loopStarted) {
 				scaleCookie.value(scale);
 			}
-			drawLoadedImage(currentImage);
+
+			drawMainImage();
 			return;
 		}
 		return scale;
@@ -360,14 +360,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		}
 	} ());
 
-	/*
-		(function() { //set the scale from the cookies, if it exists there.
-			var scaleFromCookie = scaleCookie.value();
-			if (scaleFromCookie) {
-				setScale(+scaleFromCookie); // TODO: causing a double entrance, wtf?
-			}
-		} ());
-		*/
+	(function() { //set the scale from the cookies, if it exists there.
+		var scaleFromCookie = scaleCookie.value();
+		if (scaleFromCookie) {
+			setScale( + scaleFromCookie); // TODO: causing a double entrance, wtf?
+		}
+	} ());
 
 	drawMainImage(callback);
 };
+
