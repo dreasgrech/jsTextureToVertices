@@ -18,9 +18,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
+	verticesCookieSeperator = '#',
 	scaleCookieName = 'scale',
-	scaleCookie = cookies.read(scaleCookieName) || cookies.create(scaleCookieName, ''),
 	verticesCookieName = 'vertices',
+	scaleCookie = cookies.read(scaleCookieName) || cookies.create(scaleCookieName, ''),
 	verticesCookie = cookies.read(verticesCookieName) || cookies.create(verticesCookieName, ''),
 	clearMarkers = function() {
 		markers.length = 0;
@@ -46,7 +47,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		polygonCanvas.style.top = position.y + 'px';
 
 		drawImage(im, vector2.zero(), width, height);
-		loopStarted = true;
 	},
 	drawMainImage = function(callback) {
 		var im = document.createElement("img");
@@ -58,7 +58,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
 	isShowingGhostMarker,
-	verticesCookieSeperator = '#',
 	iterateMarkers = function(action) {
 		var i = 0,
 		j = markers.length,
@@ -133,8 +132,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	// the undo stack contains undoActions
 	undoStack = [],
-	loopStarted = false,
-	// used because of the cookie setting; a couple of usage searches is all it takes to find out more...
+	loopStarted = false, // loopStart is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
 	addMarkerToCollection = (function() {
 		markers.push = function() {
 			throw "lulz";
@@ -165,7 +163,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		color = color || defaultMarkerColor;
 		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
-		//markers.splice(collectionIndex, 0, newMarker);
 		addMarkerToCollection(newMarker, collectionIndex);
 		undoStack.push(undoActions.newMarker);
 		update();
@@ -219,7 +216,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		}
 		return scale;
 	},
-	library = {
+	library = { // this object contains the functions that are exposed to the client
 		getWidth: function() {
 			return width;
 		},
@@ -363,10 +360,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	(function() { //set the scale from the cookies, if it exists there.
 		var scaleFromCookie = scaleCookie.value();
 		if (scaleFromCookie) {
-			setScale( + scaleFromCookie); // TODO: causing a double entrance, wtf?
+			setScale( + scaleFromCookie);
 		}
 	} ());
 
+	loopStarted = true;
 	drawMainImage(callback);
 };
-

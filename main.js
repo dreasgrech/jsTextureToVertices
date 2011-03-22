@@ -237,9 +237,8 @@
 
 			});
 
-			var getToggleOption = function (label, changeHandler, checked) {
+			var getToggleOption = function(label, changeHandler, checked) {
 				// TODO: label is currently unused; use it!
-				
 				if (typeof checked === "undefined") {
 					checked = true;
 				}
@@ -250,23 +249,22 @@
 				option.onchange = changeHandler;
 				return option;
 			},
-			    getButtonOption = function (value, clickHandler) {
-				    var button = document.createElement('input');
-				    button.type = 'button';
-				    button.value = value;
-				    button.onclick = clickHandler;
-				    return button;
-			    };
+			getButtonOption = function(value, clickHandler) {
+				var button = document.createElement('input');
+				button.type = 'button';
+				button.value = value;
+				button.onclick = clickHandler;
+				return button;
+			};
 
+			db.addSection(200, function(content) {
+				var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true),
+				verticesDisplayToggle = getToggleOption("Toggle polygon", library.toggleVerticesDisplay, true);
 
-			db.addSection(200, function (content) {
-					var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true),
-					    verticesDisplayToggle = getToggleOption("Toggle polygon", library.toggleVerticesDisplay, true);
-
-					content.appendChild(polygonDisplayToggle);
-					content.appendChild(verticesDisplayToggle);
-					content.appendChild(getButtonOption('Undo', library.undo));
-					content.appendChild(getButtonOption('Redo', library.redo));
+				content.appendChild(polygonDisplayToggle);
+				content.appendChild(verticesDisplayToggle);
+				content.appendChild(getButtonOption('Undo', library.undo));
+				content.appendChild(getButtonOption('Redo', library.redo));
 			});
 
 			(function(introContainerID) {
@@ -279,7 +277,7 @@
 				});
 			} ('introduction'));
 
-			setInterval(library.update, 50);
+			setInterval(library.update, 100);
 			setInterval(displayVerticesSection.update, 100);
 		});
 	}

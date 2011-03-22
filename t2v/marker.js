@@ -1,6 +1,7 @@
 var marker = function(context, position, width, height, scale, defaultColor) {
 	var pos = position,
-	previousPos, _scale = scale,
+	previousPos, 
+	_scale = scale,
 	defaultSelectedColor = 'rgb(128, 0, 255)',
 	isSelected = false,
 	boundingBox = function() {
@@ -62,7 +63,6 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		},
 		select: function() {
 			isSelected = true;
-
 		},
 		unselect: function() {
 			isSelected = false;
@@ -72,3 +72,4 @@ var marker = function(context, position, width, height, scale, defaultColor) {
 		}
 	};
 };
+
