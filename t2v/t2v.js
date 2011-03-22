@@ -14,7 +14,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	width,
 	height,
 	markers = [],
-	markerUndoStack = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -93,14 +92,16 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		});
 	},
 	update = function() {
-		if (loopStarted) {
-			clearCanvas();
-			drawPolygonFill();
-			drawMarkers();
-			if (isShowingGhostMarker) {
-				ghostMarker.scale(scale);
-				ghostMarker.draw();
-			}
+		if (!loopStarted) {
+			return;
+		}
+
+		clearCanvas();
+		drawPolygonFill();
+		drawMarkers();
+		if (isShowingGhostMarker) {
+			ghostMarker.scale(scale);
+			ghostMarker.draw();
 		}
 	},
 	action = function(fn) { // TODO: it would be good to encapsulate action items along with their undo actions
@@ -125,6 +126,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	// the undo stack contains undoActions
 	undoStack = [],
+	// the markerUndoStack contains the markers that were "undoed" (or something like that)
+	markerUndoStack = [],
 	loopStarted = false,
 	// loopStart is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
 	addMarkerToCollection = (function() {
@@ -151,21 +154,21 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		verticesCookie.value(cookieValue.join(verticesCookieSeperator));
 	},
 	addMarker = function(position, color, collectionIndex) {
-		if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
-			collectionIndex = markers.length;
-		}
-
 		if (markers.length + 1 > maxVertices) { // currently at the limit of the number of vertices that can be added
 			return;
 		}
 
-		color = color || defaultMarkerColor;
-		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color);
+		if (typeof collectionIndex === "undefined") { // collectionIndex index was not given, thus add the new marker to the last of the list
+			collectionIndex = markers.length;
+		}
+
+		var newMarker = marker(polygonContext, position, markerRadius, markerHeight, scale, color || defaultMarkerColor);
 		addMarkerToCollection(newMarker, collectionIndex);
 		if (loopStarted) {
 			writeMarkersToCookie();
 			undoStack.push(undoActions.newMarker);
 		}
+
 		update();
 	},
 	iterateEdges = function(action) {
@@ -197,26 +200,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		return num;
 	},
-	setScale = function(newScale) {
-		if (typeof newScale !== "undefined") {
-			if (newScale === scale) {
-				return;
-			}
-
-			iterateMarkers(function(marker) {
-				marker.scale(newScale);
-			});
-
-			scale = newScale;
-			if (loopStarted) {
-				scaleCookie.value(scale);
-				drawLoadedImage();
-			}
-
-			return;
-		}
-		return scale;
-	},
 	library = { // this object contains the functions that are exposed to the outside
 		getWidth: function() {
 			return width;
@@ -224,7 +207,26 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		getHeight: function() {
 			return height;
 		},
-		scale: setScale,
+		scale: function(newScale) {
+			if (typeof newScale !== "undefined") {
+				if (newScale === scale) {
+					return;
+				}
+
+				iterateMarkers(function(marker) {
+					marker.scale(newScale);
+				});
+
+				scale = newScale;
+				if (loopStarted) {
+					scaleCookie.value(scale);
+					drawLoadedImage();
+				}
+
+				return;
+			}
+			return scale;
+		},
 		addMarker: addMarker,
 		addMarkerBetween: function(marker1, marker2, position) {
 			var marker1Index = getMarkerIndex(marker1),
@@ -274,7 +276,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			var reader = new FileReader();
 			reader.onload = function(e) {
 				// changing the src property will cause imageHolder.onload to trigger
-				imageHolder.src = e.target.result; 
+				imageHolder.src = e.target.result;
 			};
 			reader.readAsDataURL(clientImage);
 		},
@@ -359,13 +361,13 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	(function() { //set the scale from the cookies, if it exists there.
 		var scaleFromCookie = scaleCookie.value();
 		if (scaleFromCookie) {
-			setScale(+scaleFromCookie);
+			library.scale( + scaleFromCookie);
 		}
 	} ());
 
 	imageHolder.onload = function() {
 		drawLoadedImage();
-		imageHolder.onload = function() { 
+		imageHolder.onload = function() {
 
 			/* overwriting the handler because I want the markers to be cleared after a new image has been loaded ONLY.
 			 * If I didn't do this, then the cookie markers would be deleted after the main image loads.
