@@ -14,6 +14,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	width,
 	height,
 	markers = [],
+	sequentialMarkers = [], // the same object found in markers[] but ordered by time of insertion
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -114,7 +115,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	draggingMarkerInitialPosition,
 	undoActions = {
 		'newMarker': action(function() {
-			var lastMarker = markers.pop();
+			var lastMarker = sequentialMarkers.pop();
+			iterateMarkers(function (m, i) { // TODO: CONTINUE FROM HERE!!!
+				if (m === lastMarker) {
+					markers[i] //delete this
+				}
+				});
 			markerUndoStack.push(lastMarker);
 		}),
 		'dragMarker': action(function() {
@@ -140,6 +146,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 
 			markers.splice(index, 0, value);
+			sequentialMarkers.push(value);
 
 			//markerUndoStack.length = 1;
 			//markerUndoStack.push(value);
@@ -171,6 +178,16 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		update();
 	},
+		addMarkerBetween= function(marker1, marker2, position) {
+			var marker1Index = getMarkerIndex(marker1), marker2Index = getMarkerIndex(marker2);
+
+			collectionIndex = Math.max(marker1Index, marker2Index);
+			if (collectionIndex === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
+				collectionIndex++;
+			}
+
+			addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
+		},
 	iterateEdges = function(action) {
 		var i = 0,
 		j = markers.length,
@@ -228,16 +245,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			return scale;
 		},
 		addMarker: addMarker,
-		addMarkerBetween: function(marker1, marker2, position) {
-			var marker1Index = getMarkerIndex(marker1),
-			marker2Index = getMarkerIndex(marker2);
-			collectionIndex = Math.max(marker1Index, marker2Index);
-			if (Math.max(marker1Index, marker2Index) === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
-				collectionIndex++;
-			}
-
-			addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
-		},
+		addMarkerBetween: addMarkerBetween,
 		getVertices: getVertices,
 		getMarkerAt: function(position) {
 			return iterateMarkers(function(marker) {
