@@ -14,7 +14,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	width,
 	height,
 	markers = [],
-	sequentialMarkers = [], // the same object found in markers[] but ordered by time of insertion
+	sequentialMarkers = [],
+	// the same object found in markers[] but ordered by time of insertion
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -116,11 +117,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	undoActions = {
 		'newMarker': action(function() {
 			var lastMarker = sequentialMarkers.pop();
-			iterateMarkers(function (m, i) { // TODO: CONTINUE FROM HERE!!!
+			iterateMarkers(function(m, i) {
 				if (m === lastMarker) {
-					markers[i] //delete this
+					markers = markers.slice(0, i).concat(markers.slice(i + 1, markers.length)); // no internet atm so I forgot how to properly delete from an array :(  came up with this sloppy solution instead
 				}
-				});
+			});
 			markerUndoStack.push(lastMarker);
 		}),
 		'dragMarker': action(function() {
@@ -178,16 +179,17 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		update();
 	},
-		addMarkerBetween= function(marker1, marker2, position) {
-			var marker1Index = getMarkerIndex(marker1), marker2Index = getMarkerIndex(marker2);
+	addMarkerBetween = function(marker1, marker2, position) {
+		var marker1Index = getMarkerIndex(marker1),
+		marker2Index = getMarkerIndex(marker2);
 
-			collectionIndex = Math.max(marker1Index, marker2Index);
-			if (collectionIndex === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
-				collectionIndex++;
-			}
+		collectionIndex = Math.max(marker1Index, marker2Index);
+		if (collectionIndex === markers.length - 1 && ! Math.min(marker1Index, marker2Index)) {
+			collectionIndex++;
+		}
 
-			addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
-		},
+		addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
+	},
 	iterateEdges = function(action) {
 		var i = 0,
 		j = markers.length,
