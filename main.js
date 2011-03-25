@@ -259,12 +259,20 @@
 
 			db.addSection(200, function(content) {
 				var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true),
-				verticesDisplayToggle = getToggleOption("Toggle polygon", library.toggleVerticesDisplay, true);
+				verticesDisplayToggle = getToggleOption("Toggle vertices", library.toggleVerticesDisplay, true);
 
 				content.appendChild(polygonDisplayToggle);
 				content.appendChild(verticesDisplayToggle);
 				content.appendChild(getButtonOption('Undo', library.undo));
 				content.appendChild(getButtonOption('Redo', library.redo));
+				content.appendChild(getButtonOption('Delete', function () {
+						var selectedMarker = library.getSelectedMarker();
+						if (selectedMarker) {
+							library.deleteMarker(selectedMarker);
+							return;
+						}
+						alert('You must first select a marker before you can delete it!');
+				}));
 			});
 
 			(function(introContainerID) {

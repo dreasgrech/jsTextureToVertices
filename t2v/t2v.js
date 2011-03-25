@@ -6,15 +6,16 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	defaultFirstMarkerColor = 'rgb(255, 249, 4)',
 	defaultLastMarkerColor = '#002EB8',
 	defaultFillColor = 'rgba(0, 0, 200, 0.5)',
+	// a friendly reminder: changing these show<Something> variables to false means you should also uncheck the option checkboxes from the dashboard
 	showPolygon = true,
-	// a friendly reminder: changing this to false means you should also uncheck the option checkbox from the dashboard
 	showVertices = true,
 	scale = 1,
 	logs = logger(),
 	width,
 	height,
 	markers = [],
-	sequentialMarkers = [],	// the same objects found in markers[] but ordered by time of insertion; used for undoing
+	sequentialMarkers = [],
+	// sequentialMarkers contains the same objects found in markers[] but ordered by time of insertion; used for undoing
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -48,7 +49,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	},
 	imageHolder = document.createElement("img"),
 	ghostMarker = marker(polygonContext, vector2.zero, markerRadius, markerHeight, scale, defaultGhostMarkerColor),
-	// that semi invisible marker that appears whenever the mouse is hovering on an edge
+	// ghostMarker is that semi invisible marker that appears whenever the mouse is hovering on an edge
 	isShowingGhostMarker,
 	iterateMarkers = function(action) {
 		var i = 0,
@@ -113,16 +114,19 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	draggingMarker,
 	lastMarkerDragged,
 	draggingMarkerInitialPosition,
+	deleteMarker = function(marker) {
+		iterateMarkers(function(m, i) {
+			if (m === marker) {
+				currentlySelectedMarker = null; // just in case the marker to be deleted was selected
+				markers = markers.slice(0, i).concat(markers.slice(i + 1, markers.length)); // no internet atm so I forgot how to properly delete from an array :(  came up with this sloppy solution instead
+			}
+		});
+		writeMarkersToCookie();
+	},
 	undoActions = {
 		'newMarker': action(function() {
 			var lastAddedMarker = sequentialMarkers.pop();
-			iterateMarkers(function(m, i) {
-				if (m === lastAddedMarker) {
-					markers = markers.slice(0, i).concat(markers.slice(i + 1, markers.length)); // no internet atm so I forgot how to properly delete from an array :(  came up with this sloppy solution instead
-				}
-			});
-					writeMarkersToCookie();
-
+			deleteMarker(lastAddedMarker);
 			markerUndoStack.push(lastAddedMarker);
 		}),
 		'dragMarker': action(function() {
@@ -137,7 +141,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	// the markerUndoStack contains the markers that were "undoed" (or something like that)
 	markerUndoStack = [],
 	loopStarted = false,
-	// loopStart is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
+	// loopStarted is needed because of the cookie setting; a couple of usage searches is all it takes to find out more...
 	addMarkerToCollection = (function() {
 		markers.push = function() {
 			throw "lulz";
@@ -220,6 +224,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		return num;
 	},
+	currentlySelectedMarker,
 	library = { // this object contains the functions that are exposed to the outside
 		getWidth: function() {
 			return width;
@@ -263,10 +268,14 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			undoStack.push(undoActions.dragMarker);
 		},
 		update: update,
+		getSelectedMarker: function() {
+			return currentlySelectedMarker;
+		},
 		setSelectedMarker: function(marker) {
 			iterateMarkers(function(m) {
 				if (m === marker) {
 					m.select();
+					currentlySelectedMarker = m;
 					return;
 				}
 				m.unselect();
@@ -343,7 +352,8 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		completeMarkerDrag: function() {
 			draggingMarker = null;
 			writeMarkersToCookie();
-		}
+		},
+		deleteMarker: deleteMarker
 	};
 
 	(function() { // Load vertices from cookies, if they exist.
