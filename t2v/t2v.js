@@ -14,8 +14,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	width,
 	height,
 	markers = [],
-	sequentialMarkers = [],
-	// the same object found in markers[] but ordered by time of insertion
+	sequentialMarkers = [],	// the same objects found in markers[] but ordered by time of insertion; used for undoing
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -116,13 +115,15 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	draggingMarkerInitialPosition,
 	undoActions = {
 		'newMarker': action(function() {
-			var lastMarker = sequentialMarkers.pop();
+			var lastAddedMarker = sequentialMarkers.pop();
 			iterateMarkers(function(m, i) {
-				if (m === lastMarker) {
+				if (m === lastAddedMarker) {
 					markers = markers.slice(0, i).concat(markers.slice(i + 1, markers.length)); // no internet atm so I forgot how to properly delete from an array :(  came up with this sloppy solution instead
 				}
 			});
-			markerUndoStack.push(lastMarker);
+					writeMarkersToCookie();
+
+			markerUndoStack.push(lastAddedMarker);
 		}),
 		'dragMarker': action(function() {
 			if (lastMarkerDragged) {
