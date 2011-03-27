@@ -271,6 +271,7 @@
 							library.deleteMarker(selectedMarker);
 							return;
 						}
+
 						alert('You must first select a marker before you can delete it!');
 				}));
 			});

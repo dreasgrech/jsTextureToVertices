@@ -16,6 +16,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	markers = [],
 	sequentialMarkers = [],
 	// sequentialMarkers contains the same objects found in markers[] but ordered by time of insertion; used for undoing
+	sequentialDeletedMarkers = [],
 	clearCanvas = function() {
 		polygonContext.clearRect(0, 0, width, height);
 	},
@@ -106,9 +107,12 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			ghostMarker.draw();
 		}
 	},
-	action = function(fn) { // TODO: it would be good to encapsulate action items along with their undo actions
+	action = function(fn, name) { // TODO: it would be good to encapsulate action items along with their undo actions
 		return {
-			undo: fn
+			undo: fn,
+			      toString: function () {
+				     return name; 
+			      }
 		};
 	},
 	draggingMarker,
@@ -117,24 +121,34 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 	deleteMarker = function(marker) {
 		iterateMarkers(function(m, i) {
 			if (m === marker) {
-				currentlySelectedMarker = null; // just in case the marker to be deleted was selected
+			if (currentlySelectedMarker == m) {
+				currentlySelectedMarker = null; 
+			}
 				markers = markers.slice(0, i).concat(markers.slice(i + 1, markers.length)); // no internet atm so I forgot how to properly delete from an array :(  came up with this sloppy solution instead
+				sequentialDeletedMarkers.push({marker: m, index: i});
 			}
 		});
+
+		markerUndoStack.push(marker);
 		writeMarkersToCookie();
 	},
 	undoActions = {
 		'newMarker': action(function() {
 			var lastAddedMarker = sequentialMarkers.pop();
 			deleteMarker(lastAddedMarker);
-			markerUndoStack.push(lastAddedMarker);
-		}),
+		}, 'new'),
+		'deleteMarker': action(function() {
+			console.log('undoing a delete');
+			var lastDeletedMarker = sequentialDeletedMarkers.pop();
+			addMarker(lastDeletedMarker.marker.position(), '', lastDeletedMarker.index, false);
+			console.log(lastDeletedMarker);
+		}, 'delete'),
 		'dragMarker': action(function() {
 			if (lastMarkerDragged) {
 				lastMarkerDragged.moveTo(draggingMarkerInitialPosition);
 				lastMarkerDragged = null;
 			}
-		})
+		}, 'drag')
 	},
 	// the undo stack contains undoActions
 	undoStack = [],
@@ -153,9 +167,6 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 			markers.splice(index, 0, value);
 			sequentialMarkers.push(value);
-
-			//markerUndoStack.length = 1;
-			//markerUndoStack.push(value);
 		};
 	} ()),
 	writeMarkersToCookie = function() {
@@ -166,7 +177,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 
 		verticesCookie.value(cookieValue.join(verticesCookieSeperator));
 	},
-	addMarker = function(position, color, collectionIndex) {
+	addMarker = function(position, color, collectionIndex, enableUndo) {
 		if (markers.length + 1 > maxVertices) { // currently at the limit of the number of vertices that can be added
 			return;
 		}
@@ -179,7 +190,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 		addMarkerToCollection(newMarker, collectionIndex);
 		if (loopStarted) {
 			writeMarkersToCookie();
-			undoStack.push(undoActions.newMarker);
+			if (enableUndo) {
+				undoStack.push(undoActions.newMarker);
+				console.log('enabling undo');
+			}
 		}
 
 		update();
@@ -193,7 +207,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			collectionIndex++;
 		}
 
-		addMarker(vector2.divide(position, scale), null, collectionIndex); // null to use the default color
+		addMarker(vector2.divide(position, scale), null, collectionIndex, true); // null to use the default color
 	},
 	iterateEdges = function(action) {
 		var i = 0,
@@ -252,7 +266,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			}
 			return scale;
 		},
-		addMarker: addMarker,
+		addMarker: function (position, color, collectionIndex) {
+				   addMarker(position, color, collectionIndex, true);
+			   },
 		addMarkerBetween: addMarkerBetween,
 		getVertices: getVertices,
 		getMarkerAt: function(position) {
@@ -326,6 +342,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			var lastAction;
 			if (undoStack.length) {
 				lastAction = undoStack.pop();
+				console.log(lastAction.toString());
 				lastAction.undo();
 			}
 		},
@@ -333,11 +350,11 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			//TODO: implementation
 			alert('Currently non functional');
 		},
-		redoMarker: function() {
+		/*redoMarker: function() {
 			if (markerUndoStack.length) {
 				addMarkerToCollection(markerUndoStack.pop());
 			}
-		},
+		},*/
 		startMarkerDrag: function(m) {
 			draggingMarker = lastMarkerDragged = m;
 			draggingMarkerInitialPosition = vector2(draggingMarker.position());
@@ -353,7 +370,10 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 			draggingMarker = null;
 			writeMarkersToCookie();
 		},
-		deleteMarker: deleteMarker
+		deleteMarker: function (m) {
+			deleteMarker(m);
+			undoStack.push(undoActions.deleteMarker);
+	        } 
 	};
 
 	(function() { // Load vertices from cookies, if they exist.
@@ -374,7 +394,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				xY = verticesFromCookie[i].split(',');
 				x = xY[0];
 				y = xY[1];
-				addMarker(vector2(x, y));
+				addMarker(vector2(x, y), '', undefined, false); // TODO: gaah, this is messy
 			}
 		}
 	} ());
