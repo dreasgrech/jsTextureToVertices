@@ -5,19 +5,19 @@ var vector2 = function(x, y) {
 	}
 
 	var liesBetween = function(line) { // 'line' is assumed to be an array of two vectors
-		// TODO: put reference to code (from stackoverflow)
+		// Code from: http://stackoverflow.com/questions/328107/how-can-you-determine-a-point-is-between-two-other-points-on-a-line-segment/328122#328122
 		var epsilon = 200, a = line[0], b = line[1], c = out,
-		crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y);
+		crossproduct = (c.y - a.y) * (b.x - a.x) - (c.x - a.x) * (b.y - a.y), dotproduct, squaredlengthba;
 		if (Math.abs(crossproduct) > epsilon) {
 			return false;
 		}
 
-		var dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
+		dotproduct = (c.x - a.x) * (b.x - a.x) + (c.y - a.y) * (b.y - a.y);
 		if (dotproduct < 0) {
 			return false;
 		}
 
-		var squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
+		squaredlengthba = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y);
 		if (dotproduct > squaredlengthba) {
 			return false;
 		}
