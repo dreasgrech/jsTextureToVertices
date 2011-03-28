@@ -56,7 +56,7 @@ var dashboard = (function() {
 
 		var topSection = dashboardItem(100, function() {});
 		addElementToDashboard(topSection.element);
-		//topSection.element.style.padding = 5 + "px";
+		topSection.element.style.paddingBottom = "10px";
 
 		return {
 			getWidget: function() {

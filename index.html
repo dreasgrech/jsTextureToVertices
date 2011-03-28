@@ -4,15 +4,20 @@
 	</head>
 	<body>
 		<h1>Texture to Vertices</h1>
-		<div>
+		<div style="border:1 px solid black">
 			<canvas id="imageCanvas" style="position: absolute; z-index: 0;"></canvas>
 			<canvas id="polygonCanvas" style="position: absolute; z-index: 0.5;"></canvas>
 		</div>
 
 		<div id="introduction">
+			<p id="browsertest-warning"><b>Didn't spend too much time on cross-browser testing, so if something doesn't work (including cookies, on yours, tough luck.</b><br/></p>
+			<p id="intro-text">
 			If your browser supports the <a href='http://www.w3.org/TR/FileAPI/' target='blank'>File API</a>, you can drag an image to the existing one to change it.<br/>
-			Click on the image to add vertices<br/>
-			The yellow vertex is the first vertex in the list and the blue one is the last.<br/>
+			Click on the image to add vertices.  <b>Vertices are draggable</b>, as is this dashboard.<br/>  
+			The yellow vertex is the first vertex in the list and the blue one is the last.  To delete a vertex, click on it and hit the Delete button.<br/>
+			Use the <b>mouse wheel to scale</b>.<br/>
+			The undo functionality is still a bit dodgy.<br/>
+			</p>
 		</div>
 
 		<script src="../jsCookieHandler/cookies.js"></script>

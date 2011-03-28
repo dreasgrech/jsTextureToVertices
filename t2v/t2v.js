@@ -308,7 +308,9 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				throw "loadNewImage expectes the object that resides <dropEventArgs>.dataTransfer.files[0]";
 			}
 
-			//imageHolder.file = clientImage; // the example I got this from used this line, but it still works when it's not there; needs further research
+			// The example I got this from used this line (<>.file = <>), but it still works (on my machine) when it's commented out; TODO: hmm, needs further research
+			//imageHolder.file = clientImage; 
+
 			var reader = new FileReader();
 			reader.onload = function(e) {
 				// changing the src property will cause imageHolder.onload to trigger
@@ -394,7 +396,7 @@ var t2v = function(imageCanvas, imageContext, polygonCanvas, polygonContext, pos
 				xY = verticesFromCookie[i].split(',');
 				x = xY[0];
 				y = xY[1];
-				addMarker(vector2(x, y), '', undefined, false); // TODO: gaah, this is messy
+				addMarker(vector2(x, y), '', undefined, false); // TODO: gaah, this is invocation is messy.  Fix!
 			}
 		}
 	} ());

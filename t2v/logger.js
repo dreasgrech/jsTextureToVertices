@@ -1,4 +1,5 @@
 var logger = function() {
+	// TODO: Work in progress...
 	var line = function(message) {
 
 	},

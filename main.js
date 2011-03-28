@@ -33,11 +33,11 @@
 			},
 			openVerticesWindow = function(vertices, format) {
 				if (vertices.length === 0) {
+					alert('You need at least once vertex to do that');
 					return;
 				}
 
-				format = format || defaultRawFormat;
-				var html = getVerticesPositionsHTML(vertices, format),
+				var html = getVerticesPositionsHTML(vertices, format || defaultRawFormat),
 				win = window.open("", "newwin", "height=250, width=250,toolbar=no,menubar=no");
 				win.location = 'about:blank'; // clears the window's HTML
 				win.document.write(html);
@@ -50,7 +50,7 @@
 				library.loadNewImage(clientImage);
 			},
 			db = dashboard({
-				x: 900,
+				x: 600,
 				y: 200
 			},
 			'Dashboard', 'dashboard', 'verticesHeader'),
@@ -61,7 +61,7 @@
 				return Math.round(value * n) / n;
 			},
 			displayVerticesSection = (function() {
-				//var addVertexDisplay = function (
+				//var addVertexDisplay = function ( //TODO: you created this for something; remember what before you delete it.
 				return db.addSection(displayVerticesSectionWidth, function(content) {
 					var output = [],
 					i,
@@ -276,7 +276,7 @@
 				}));
 			});
 
-			(function(introContainerID) {
+			(function(introContainerID) { // Grab the introduction text from the container on the page and create a section for it on the dashboard
 				var introContainer = document.getElementById(introContainerID),
 				introText = introContainer.innerHTML;
 
