@@ -226,7 +226,7 @@
 			db.addSection(100, function(content) {
 				var clearLink = document.createElement('a');
 				clearLink.href = "#";
-				//clearLink.alt = "Remove all vertices"; // TODO: check for the tooltip
+				clearLink.title = "Remove all vertices"; 
 				clearLink.innerHTML = "Clear";
 				clearLink.onclick = function() {
 					if (library.getMarkerCount() && confirm("Are you sure you want to remove all vertices?")) {
@@ -237,8 +237,7 @@
 
 			});
 
-			var getToggleOption = function(label, changeHandler, checked) {
-				// TODO: label is currently unused; use it!
+			var getToggleOption = function(label, changeHandler, checked, tooltip) {
 				if (typeof checked === "undefined") {
 					checked = true;
 				}
@@ -247,6 +246,7 @@
 				option.type = "checkbox";
 				option.checked = checked;
 				option.onchange = changeHandler;
+				option.title = tooltip;
 				return option;
 			},
 			getButtonOption = function(value, clickHandler) {
@@ -258,8 +258,8 @@
 			};
 
 			db.addSection(200, function(content) {
-				var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true),
-				verticesDisplayToggle = getToggleOption("Toggle vertices", library.toggleVerticesDisplay, true);
+				var polygonDisplayToggle = getToggleOption("Toggle polygon", library.togglePolygonDisplay, true, "Toggle polygon display"),
+				verticesDisplayToggle = getToggleOption("Toggle vertices", library.toggleVerticesDisplay, true, "Toggle vertices display");
 
 				content.appendChild(polygonDisplayToggle);
 				content.appendChild(verticesDisplayToggle);
